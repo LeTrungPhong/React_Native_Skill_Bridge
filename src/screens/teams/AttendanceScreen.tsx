@@ -1,9 +1,9 @@
 import { Text, View } from "react-native";
 
-export default function PostScreen() {
+export default function AttendanceScreen() {
     return (
         <View>
-            <Text>Post</Text>
+            <Text>Attendance</Text>
         </View>
     );
 }

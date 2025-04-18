@@ -13,17 +13,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import PostScreen from './screens/teams/PostScreen';
+import GeneralScreen from './screens/teams/GeneralScreen';
 import { TeamsStackParamList } from './navigation/type';
 
 const Tab = createBottomTabNavigator();
 
-const TeamsStack = createStackNavigator<TeamsStackParamList>();
+const TeamsStack = createStackNavigator();
 
 const TeamsStackScreen = () => (
     <TeamsStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
         <TeamsStack.Screen name="TeamsList" component={TeamsScreen}  />
-        <TeamsStack.Screen name="PostScreen" component={PostScreen}  />
+        <TeamsStack.Screen name="GeneralScreen" component={GeneralScreen}  />
     </TeamsStack.Navigator>
 );
 
