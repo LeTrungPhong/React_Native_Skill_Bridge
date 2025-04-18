@@ -4,7 +4,10 @@ import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { TeamItem, Team } from '@/src/components/TeamItem';
+import { TeamItem, Team } from '@/src/components/teams/TeamItem';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { TeamsStackParamList } from '@/src/navigation/type';
 
 const TEAMS: Team[] = [
   {
@@ -33,14 +36,21 @@ const TEAMS: Team[] = [
   },
 ];
 
+type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
+
 export default function TeamsScreen() {
   const colorScheme = useColorScheme();
   const [teams] = useState<Team[]>(TEAMS);
+  const navigation = useNavigation<TeamsScreenNavigationProp>();
 
   const renderTeamItem = ({ item }: { item: Team }) => (
     <TeamItem 
       team={item} 
-      onPress={() => console.log(`Selected team: ${item.name}`)} 
+      onPress={() => {
+        console.log(`Selected team: ${item.name}`);
+        // Navigate to the PostScreen with the selected team as a parameter
+        navigation.navigate('PostScreen', { team: item });
+      }} 
     />
   );
 

@@ -6,14 +6,26 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ActivityScreen from './screens/ActivityScreen';
 import AssignmentScreen from './screens/AssignmentScreen';
 import ChatScreen from './screens/ChatScreen';
-import TeamsScreen from './screens/TeamsScreen';
+import TeamsScreen from './screens/teams/TeamsScreen';
 import MoreScreen from './screens/MoreScreen';
 
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
+import PostScreen from './screens/teams/PostScreen';
+import { TeamsStackParamList } from './navigation/type';
 
 const Tab = createBottomTabNavigator();
+
+const TeamsStack = createStackNavigator<TeamsStackParamList>();
+
+const TeamsStackScreen = () => (
+    <TeamsStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+        <TeamsStack.Screen name="TeamsList" component={TeamsScreen}  />
+        <TeamsStack.Screen name="PostScreen" component={PostScreen}  />
+    </TeamsStack.Navigator>
+);
 
 const AppNavigator = () => {
     return (
@@ -24,8 +36,9 @@ const AppNavigator = () => {
                         paddingTop: 10,
                         paddingBottom: 10,
                         height: 70,
+                        borderTopColor: 'gray',
                     },
-                }}>
+                }}> 
                 <Tab.Screen
                     name="activity"
                     component={ActivityScreen}
@@ -34,6 +47,7 @@ const AppNavigator = () => {
                             <Ionicons name="notifications-outline" size={size} color={color} />
                         ),
                         title: 'Activity',
+                        headerShown: false,
                     }}
                 />
                 <Tab.Screen
@@ -43,14 +57,16 @@ const AppNavigator = () => {
                             <MaterialIcons name="assignment" size={size} color={color} />
                         ),
                         title: 'Assignment',
+                        headerShown: false,
                     }} />
                 <Tab.Screen
                     name="teams"
-                    component={TeamsScreen} options={{
+                    component={TeamsStackScreen} options={{
                         tabBarIcon: ({ color, size }) => (
                             <Ionicons name="people-sharp" size={size} color={color} />
                         ),
                         title: 'Teams',
+                        headerShown: false,
                     }} />
                 <Tab.Screen
                     name="chat"
@@ -59,6 +75,7 @@ const AppNavigator = () => {
                             <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
                         ),
                         title: 'Chat',
+                        headerShown: false,
                     }} />
                 <Tab.Screen
                     name="more"
@@ -67,6 +84,7 @@ const AppNavigator = () => {
                             <MaterialIcons name="more" size={size} color={color} />
                         ),
                         title: 'More',
+                        headerShown: false,
                     }} />
             </Tab.Navigator>
         </NavigationContainer>
