@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { GeneralScreenRouteProp } from '@/src/navigation/type';
 import { createStackNavigator } from '@react-navigation/stack';
 import PostScreen from './PostScreen';
-import AssignmentScreen from '../AssignmentScreen';
+import AssignmentScreen from './AssignmentScreen';
 import AttendanceScreen from './AttendanceScreen';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
