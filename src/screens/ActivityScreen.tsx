@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
-export default function AssignmentScreen() {
+export default function ActivityScreen() {
   const colorScheme = useColorScheme();
 
   return (
@@ -13,10 +13,10 @@ export default function AssignmentScreen() {
         style={styles.header} 
         tint={colorScheme === 'dark' ? 'dark' : 'light'}
       >
-        <Text style={styles.title}>Assignment</Text>
+        <Text style={styles.title}>Activity</Text>
       </BlurView>
       <View style={styles.content}>
-        <Text>Your assignments will appear here</Text>
+        <Text>Recent activities will appear here</Text>
       </View>
     </View>
   );

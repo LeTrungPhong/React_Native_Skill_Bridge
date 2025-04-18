@@ -1,10 +1,10 @@
 import { StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { TeamItem, Team } from '@/components/TeamItem';
+import { TeamItem, Team } from '@/src/components/TeamItem';
 
 const TEAMS: Team[] = [
   {

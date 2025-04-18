@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
-export default function ActivityScreen() {
+export default function ChatScreen() {
   const colorScheme = useColorScheme();
 
   return (
@@ -13,10 +13,10 @@ export default function ActivityScreen() {
         style={styles.header} 
         tint={colorScheme === 'dark' ? 'dark' : 'light'}
       >
-        <Text style={styles.title}>Activity</Text>
+        <Text style={styles.title}>Chat</Text>
       </BlurView>
       <View style={styles.content}>
-        <Text>Recent activities will appear here</Text>
+        <Text>Your conversations will appear here</Text>
       </View>
     </View>
   );

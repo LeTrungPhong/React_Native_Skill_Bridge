@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useColorScheme } from '@/src/hooks/useColorScheme';
 
-export default function ChatScreen() {
+export default function AssignmentScreen() {
   const colorScheme = useColorScheme();
 
   return (
@@ -13,10 +13,10 @@ export default function ChatScreen() {
         style={styles.header} 
         tint={colorScheme === 'dark' ? 'dark' : 'light'}
       >
-        <Text style={styles.title}>Chat</Text>
+        <Text style={styles.title}>Assignment</Text>
       </BlurView>
       <View style={styles.content}>
-        <Text>Your conversations will appear here</Text>
+        <Text>Your assignments will appear here</Text>
       </View>
     </View>
   );
