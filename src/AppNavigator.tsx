@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // Import your screen components
 import ActivityScreen from './screens/ActivityScreen';
 import AssignmentScreen from './screens/AssignmentScreen';
-import ChatScreen from './screens/ChatScreen';
+import ChatScreen from './screens/chat/ChatScreen';
 import TeamsScreen from './screens/teams/TeamsScreen';
 import MoreScreen from './screens/MoreScreen';
 
@@ -15,8 +15,18 @@ import { StyleSheet, View } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import GeneralScreen from './screens/teams/GeneralScreen';
 import { TeamsStackParamList } from './navigation/type';
+import ChatDetailScreen from './screens/chat/ChatDetailScreen';
 
 const Tab = createBottomTabNavigator();
+
+const ChatStack = createStackNavigator();
+
+const ChatStackScreen = () => (
+    <ChatStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+        <ChatStack.Screen name="ChatScreen" component={ChatScreen}  />
+        <ChatStack.Screen name="ChatDetailScreen" component={ChatDetailScreen}  />
+    </ChatStack.Navigator> 
+);
 
 const TeamsStack = createStackNavigator();
 
@@ -70,7 +80,7 @@ const AppNavigator = () => {
                     }} />
                 <Tab.Screen
                     name="chat"
-                    component={ChatScreen} options={{
+                    component={ChatStackScreen} options={{
                         tabBarIcon: ({ color, size }) => (
                             <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
                         ),
