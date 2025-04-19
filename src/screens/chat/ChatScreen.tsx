@@ -55,9 +55,9 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      <BlurView 
-        intensity={80} 
-        style={styles.header} 
+      <BlurView
+        intensity={80}
+        style={styles.header}
         tint={colorScheme === 'dark' ? 'dark' : 'light'}
       >
         <Text style={styles.title}>Chat</Text>
