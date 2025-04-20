@@ -11,3 +11,11 @@ export interface IUser {
   email: string;
   password: string;
 }
+
+export interface IActivity {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: string;
+  group?: string;
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Import your screen components
-import ActivityScreen from './screens/ActivityScreen';
+import ActivityScreen from './screens/activities/ActivityScreen';
 import AssignmentScreen from './screens/AssignmentScreen';
 import ChatScreen from './screens/chat/ChatScreen';
 import TeamsScreen from './screens/teams/TeamsScreen';
@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { createStackNavigator } from '@react-navigation/stack';
 import GeneralScreen from './screens/teams/GeneralScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
+import ActivityDetailScreen from './screens/activities/ActivityDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -34,6 +35,15 @@ const TeamsStackScreen = () => (
     </TeamsStack.Navigator>
 );
 
+const ActivityStack = createStackNavigator();
+
+const ActivityStackScreen = () => (
+    <ActivityStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+        <ActivityStack.Screen name='ActivityScreen' component={ActivityScreen}  />
+        <ActivityStack.Screen name='ActivityDetailScreen' component={ActivityDetailScreen}  />
+    </ActivityStack.Navigator> 
+);
+
 const AppNavigator = () => {
     return (
         <Tab.Navigator
@@ -47,7 +57,7 @@ const AppNavigator = () => {
             }}> 
             <Tab.Screen
                 name='activity'
-                component={ActivityScreen}
+                component={ActivityStackScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='notifications-outline' size={size} color={color} />

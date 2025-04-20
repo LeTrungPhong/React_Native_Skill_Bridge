@@ -42,7 +42,7 @@ export default function ChatScreen() {
   const [chats] = useState<Chat[]>(CHATS);
   const navigation = useNavigation<ChatScreenNavigationProp>();
 
-  const rederChatItem = ({ item }: { item: Chat }) => (
+  const renderChatItem = ({ item }: { item: Chat }) => (
     <CardChat
       chat={item}
       onPress={() => {
@@ -73,7 +73,7 @@ export default function ChatScreen() {
       <View style={styles.content}>
         <FlatList
           data={chats}
-          renderItem={rederChatItem}
+          renderItem={renderChatItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 20 }}
@@ -97,6 +97,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
   content: {
     flex: 1,
