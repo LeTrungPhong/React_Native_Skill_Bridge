@@ -10,7 +10,7 @@ interface StartScreenProps {
 }
 
 const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
-  const colors = [
+  const COLORS = [
     '#5DADE2', 
     '#F5B041',
     '#58D68D',
@@ -25,8 +25,8 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
 
   // Get random color
   const getRandomColor = (): string => {
-    const randomIndex = Math.floor(Math.random() * colors.length);
-    return colors[randomIndex];
+    const randomIndex = Math.floor(Math.random() * COLORS.length);
+    return COLORS[randomIndex];
   };
 
   // Mock data for users
