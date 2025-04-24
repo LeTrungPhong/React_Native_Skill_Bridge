@@ -1,13 +1,14 @@
-import { StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, Button, Modal, TextInput, ScrollView, Switch, SafeAreaView, Alert } from 'react-native';
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { TeamItem, Team } from '@/src/components/teams/TeamItem';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { TeamsStackParamList } from '@/src/navigation/type';
+import { AuthContext } from '@/src/context/authContext';
 
 const TEAMS: Team[] = [
   {
@@ -38,10 +39,249 @@ const TEAMS: Team[] = [
 
 type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
 
+type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+type TimeField = 'startHour' | 'startMinute' | 'endHour' | 'endMinute';
+
+interface DaySchedule {
+  startHour: string;
+  startMinute: string;
+  endHour: string;
+  endMinute: string;
+}
+
+interface ScheduleItem {
+  day: DayOfWeek;
+  startTime: string;
+  endTime: string;
+}
+
+interface FormDataType {
+  className: string;
+  weeks: string;
+  roomName: string;
+  days: {
+    [key in DayOfWeek]: boolean;
+  };
+  times: {
+    [key in DayOfWeek]: DaySchedule;
+  };
+}
+
+interface FormErrorsType {
+  className: string;
+  weeks: string;
+  roomName: string;
+  schedule: string;
+}
+
 export default function TeamsScreen() {
   const colorScheme = useColorScheme();
-  const [teams] = useState<Team[]>(TEAMS);
+  const [teams, setTeams] = useState<Team[]>(TEAMS);
   const navigation = useNavigation<TeamsScreenNavigationProp>();
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrorsType>({
+    className: '',
+    weeks: '',
+    roomName: '',
+    schedule: ''
+  });
+  const [formData, setFormData] = useState<FormDataType>({
+    className: '',
+    weeks: '',
+    roomName: '',
+    days: {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+    },
+    times: {
+      monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+    }
+  });
+
+  const [state] = useContext(AuthContext);
+  console.log('AuthContext state:', state);
+
+  const resetForm = () => {
+    setFormData({
+      className: '',
+      weeks: '',
+      roomName: '',
+      days: {
+        monday: false,
+        tuesday: false,
+        wednesday: false,
+        thursday: false,
+        friday: false,
+        saturday: false,
+      },
+      times: {
+        monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      }
+    });
+    setFormErrors({
+      className: '',
+      weeks: '',
+      roomName: '',
+      schedule: ''
+    });
+  };
+
+  const toggleDay = (day: DayOfWeek) => {
+    setFormData({
+      ...formData,
+      days: {
+        ...formData.days,
+        [day]: !formData.days[day]
+      }
+    });
+    
+    // Clear any schedule error when a day is selected
+    if (formErrors.schedule && !formData.days[day]) {
+      setFormErrors({
+        ...formErrors,
+        schedule: ''
+      });
+    }
+  };
+
+  const updateTimeField = (day: DayOfWeek, field: TimeField, value: string) => {
+    // Allow only numeric values
+    if (value && !/^\d+$/.test(value)) {
+      return;
+    }
+    
+    setFormData({
+      ...formData,
+      times: {
+        ...formData.times,
+        [day]: {
+          ...formData.times[day],
+          [field]: value
+        }
+      }
+    });
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+    const newErrors: FormErrorsType = {
+      className: '',
+      weeks: '',
+      roomName: '',
+      schedule: ''
+    };
+
+    // Validate class name
+    if (!formData.className.trim()) {
+      newErrors.className = 'Class name is required';
+      isValid = false;
+    }
+
+    // Validate weeks
+    if (!formData.weeks.trim()) {
+      newErrors.weeks = 'Number of weeks is required';
+      isValid = false;
+    } else if (!/^\d+$/.test(formData.weeks) || parseInt(formData.weeks) <= 0) {
+      newErrors.weeks = 'Please enter a valid number';
+      isValid = false;
+    }
+
+    // Validate room name
+    if (!formData.roomName.trim()) {
+      newErrors.roomName = 'Room name is required';
+      isValid = false;
+    }
+
+    // Validate that at least one day is selected
+    const anyDaySelected = Object.values(formData.days).some(day => day);
+    if (!anyDaySelected) {
+      newErrors.schedule = 'Please select at least one day';
+      isValid = false;
+    } else {
+      // Validate time fields for selected days
+      const daysWithMissingTimes: DayOfWeek[] = [];
+      
+      (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
+        if (formData.days[day]) {
+          const times = formData.times[day];
+          if (!times.startHour || !times.startMinute || !times.endHour || !times.endMinute) {
+            daysWithMissingTimes.push(day);
+            isValid = false;
+          }
+        }
+      });
+      
+      if (daysWithMissingTimes.length > 0) {
+        newErrors.schedule = `Please complete time fields for: ${daysWithMissingTimes.join(', ')}`;
+      }
+    }
+
+    setFormErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please check the form for errors');
+      return;
+    }
+    
+    // Convert form data to the desired format
+    const scheduleData: ScheduleItem[] = [];
+    
+    (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
+      if (formData.days[day]) {
+        const times = formData.times[day];
+        scheduleData.push({
+          day,
+          startTime: `${times.startHour}:${times.startMinute}`,
+          endTime: `${times.endHour}:${times.endMinute}`
+        });
+      }
+    });
+    
+    // Create a new team object
+    const newTeam: Team = {
+      id: (teams.length + 1).toString(),
+      name: formData.className,
+      initials: formData.className.substring(0, 2).toUpperCase(),
+      description: `Room: ${formData.roomName}, Weeks: ${formData.weeks}`,
+      // Add additional fields if needed in your Team interface
+      // schedule: scheduleData
+    };
+    
+    // Add the new team to the list
+    setTeams([...teams, newTeam]);
+    
+    // Log the full data for debugging
+    console.log('Form submitted successfully:', {
+      className: formData.className,
+      weeks: formData.weeks,
+      roomName: formData.roomName,
+      schedule: scheduleData
+    });
+    
+    // Show success message
+    Alert.alert('Success', 'New class has been created successfully');
+    
+    // Reset form and close modal
+    resetForm();
+    setIsFormVisible(false);
+  };
 
   const renderTeamItem = ({ item }: { item: Team }) => (
     <TeamItem
@@ -53,6 +293,60 @@ export default function TeamsScreen() {
       }}
     />
   );
+
+  const renderTimeInputs = (day: DayOfWeek) => {
+    if (!formData.days[day]) return null;
+    
+    return (
+      <View style={styles.timeInputContainer}>
+        <View style={styles.timeField}>
+          <Text style={styles.timeLabel}>Start:</Text>
+          <View style={styles.timeInputWrapper}>
+            <TextInput
+              style={styles.timeInput}
+              placeholder="HH"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={formData.times[day].startHour}
+              onChangeText={(text) => updateTimeField(day, 'startHour', text)}
+            />
+            <Text>:</Text>
+            <TextInput
+              style={styles.timeInput}
+              placeholder="MM"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={formData.times[day].startMinute}
+              onChangeText={(text) => updateTimeField(day, 'startMinute', text)}
+            />
+          </View>
+        </View>
+        
+        <View style={styles.timeField}>
+          <Text style={styles.timeLabel}>End:</Text>
+          <View style={styles.timeInputWrapper}>
+            <TextInput
+              style={styles.timeInput}
+              placeholder="HH"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={formData.times[day].endHour}
+              onChangeText={(text) => updateTimeField(day, 'endHour', text)}
+            />
+            <Text>:</Text>
+            <TextInput
+              style={styles.timeInput}
+              placeholder="MM"
+              keyboardType="number-pad"
+              maxLength={2}
+              value={formData.times[day].endMinute}
+              onChangeText={(text) => updateTimeField(day, 'endMinute', text)}
+            />
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -85,6 +379,156 @@ export default function TeamsScreen() {
         keyExtractor={(item) => item.id}
         style={styles.list}
       />
+      {
+        state.roll === 'Teacher' && (
+          <View>
+            <TouchableOpacity 
+              style={styles.button_add}
+              onPress={() => setIsFormVisible(true)}
+            >
+              <Ionicons name="add" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+      {/* Class Addition Form Modal */}
+      <Modal
+        animationType="slide"
+        visible={isFormVisible}
+        onRequestClose={() => setIsFormVisible(false)}
+      >
+        <SafeAreaView style={styles.modalWrapper}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add New Class</Text>
+            <TouchableOpacity onPress={() => setIsFormVisible(false)}>
+              <Ionicons name="close" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView>
+            <View style={styles.formField}>
+              <Text style={styles.inputLabel}>Class Name</Text>
+              <TextInput
+                style={[styles.input, formErrors.className ? styles.inputError : null]}
+                placeholder="Enter class name"
+                value={formData.className}
+                onChangeText={(text) => {
+                  setFormData({...formData, className: text});
+                  if (formErrors.className) {
+                    setFormErrors({...formErrors, className: ''});
+                  }
+                }}
+              />
+              {formErrors.className ? <Text style={styles.errorText}>{formErrors.className}</Text> : null}
+            </View>
+
+            <View style={styles.formField}>
+              <Text style={styles.inputLabel}>Number of Weeks</Text>
+              <TextInput
+                style={[styles.input, formErrors.weeks ? styles.inputError : null]}
+                placeholder="Enter number of weeks"
+                keyboardType="number-pad"
+                value={formData.weeks}
+                onChangeText={(text) => {
+                  setFormData({...formData, weeks: text});
+                  if (formErrors.weeks) {
+                    setFormErrors({...formErrors, weeks: ''});
+                  }
+                }}
+              />
+              {formErrors.weeks ? <Text style={styles.errorText}>{formErrors.weeks}</Text> : null}
+            </View>
+
+            <View style={styles.formField}>
+              <Text style={styles.inputLabel}>Room Name</Text>
+              <TextInput
+                style={[styles.input, formErrors.roomName ? styles.inputError : null]}
+                placeholder="Enter room name"
+                value={formData.roomName}
+                onChangeText={(text) => {
+                  setFormData({...formData, roomName: text});
+                  if (formErrors.roomName) {
+                    setFormErrors({...formErrors, roomName: ''});
+                  }
+                }}
+              />
+              {formErrors.roomName ? <Text style={styles.errorText}>{formErrors.roomName}</Text> : null}
+            </View>
+
+            <Text style={[styles.inputLabel, {marginTop: 20}]}>Class Schedule</Text>
+            {formErrors.schedule ? <Text style={styles.errorText}>{formErrors.schedule}</Text> : null}
+            
+            {/* Days of week */}
+            <View style={styles.daysContainer}>
+              {/* Monday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Monday</Text>
+                <Switch
+                  value={formData.days.monday}
+                  onValueChange={() => toggleDay('monday')}
+                />
+              </View>
+              {renderTimeInputs('monday')}
+              
+              {/* Tuesday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Tuesday</Text>
+                <Switch
+                  value={formData.days.tuesday}
+                  onValueChange={() => toggleDay('tuesday')}
+                />
+              </View>
+              {renderTimeInputs('tuesday')}
+              
+              {/* Wednesday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Wednesday</Text>
+                <Switch
+                  value={formData.days.wednesday}
+                  onValueChange={() => toggleDay('wednesday')}
+                />
+              </View>
+              {renderTimeInputs('wednesday')}
+              
+              {/* Thursday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Thursday</Text>
+                <Switch
+                  value={formData.days.thursday}
+                  onValueChange={() => toggleDay('thursday')}
+                />
+              </View>
+              {renderTimeInputs('thursday')}
+              
+              {/* Friday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Friday</Text>
+                <Switch
+                  value={formData.days.friday}
+                  onValueChange={() => toggleDay('friday')}
+                />
+              </View>
+              {renderTimeInputs('friday')}
+              
+              {/* Saturday */}
+              <View style={styles.dayRow}>
+                <Text style={styles.dayText}>Saturday</Text>
+                <Switch
+                  value={formData.days.saturday}
+                  onValueChange={() => toggleDay('saturday')}
+                />
+              </View>
+              {renderTimeInputs('saturday')}
+            </View>
+
+            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>Create Class</Text>
+            </TouchableOpacity>
+            
+            <View style={{height: 50}} />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -126,5 +570,123 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
     padding: 16,
+  },
+  button_add: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalWrapper: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  dayRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  dayText: {
+    fontSize: 16,
+  },
+  timeInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingLeft: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  timeField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeLabel: {
+    fontSize: 14,
+    marginRight: 8,
+  },
+  timeInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    width: 40,
+    padding: 4,
+    textAlign: 'center',
+    marginHorizontal: 2,
+  },
+  submitButton: {
+    backgroundColor: '#4285F4',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 30,
+    marginBottom: 20,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  formField: {
+    marginBottom: 16,
+  },
+  daysContainer: {
+    marginBottom: 20,
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 5,
+    marginBottom: 5,
   },
 }); 
