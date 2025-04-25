@@ -1,21 +1,56 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Button, Pressable, useColorScheme } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { Team } from '@/src/components/teams/TeamItem';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { GeneralScreenRouteProp } from '@/src/navigation/type';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import PostScreen from './PostScreen';
-import AssignmentScreen from './AssignmentScreen';
+import TeamAssignmentScreen from './TeamAssignmentScreen';
 import AttendanceScreen from './AttendanceScreen';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import AssignmentDetailScreen from '../assignments/AssignmentDetailScreen';
 
 // Định nghĩa kiểu cho params
 
 const TobTab = createMaterialTopTabNavigator();
+const Stack = createStackNavigator();
 
-export default function GeneralScreen() {
+const GeneralTabs = ({ route }: any) => {
+    // const route = useRoute<GeneralScreenRouteProp>();
+    const { team } = route.params;
+    const navigation = useNavigation();
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Pressable onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="black" />
+                </Pressable>
+                <Text style={styles.title}>{team.name}</Text>
+            </View>
+            <TobTab.Navigator
+                screenOptions={{
+                    tabBarActiveTintColor: 'blue',
+                    tabBarIndicatorStyle: {
+                        backgroundColor: 'blue',
+                        height: 3,
+                    },
+                    tabBarLabelStyle: {
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                    }, 
+                }}>
+                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} />
+                <TobTab.Screen name="TeamAssignmentScreen" component={TeamAssignmentScreen} options={{ title: 'Assignment' }} />
+                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} />
+            </TobTab.Navigator>
+        </View>
+    );
+};
+
+const GeneralScreen = () => {
     const route = useRoute<GeneralScreenRouteProp>();
     const { team } = route.params;
     const navigation = useNavigation();
@@ -38,33 +73,23 @@ export default function GeneralScreen() {
             });
         };
     });
+
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Pressable onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="black" />
-                </Pressable>
-                <Text style={styles.title}>{team.name}</Text>
-            </View>
-            <TobTab.Navigator
-                screenOptions={{
-                    tabBarActiveTintColor: 'blue',
-                    tabBarIndicatorStyle: {
-                        backgroundColor: 'blue',
-                        height: 3,
-                    },
-                    tabBarLabelStyle: {
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                    }, 
-                }}>
-                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} />
-                <TobTab.Screen name="AssignmentScreen" component={AssignmentScreen} options={{ title: 'Assignment' }} />
-                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} />
-            </TobTab.Navigator>
-        </View>
+        <Stack.Navigator>
+            <Stack.Screen
+                name='GeneralTabs'
+                component={GeneralTabs}
+                initialParams={{ team }}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name='AssignmentDetailScreen'
+                component={AssignmentDetailScreen}
+                options={{ headerShown: false }}
+            />
+        </Stack.Navigator>
     );
-}
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -84,3 +109,5 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
 });
+
+export default GeneralScreen;   
