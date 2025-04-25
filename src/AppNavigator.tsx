@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 // Import your screen components
 import ActivityScreen from './screens/activities/ActivityScreen';
-import AssignmentScreen from './screens/AssignmentScreen';
+// import AssignmentScreen from './screens/AssignmentScreen';
 import ChatScreen from './screens/chat/ChatScreen';
 import TeamsScreen from './screens/teams/TeamsScreen';
 import MoreScreen from './screens/MoreScreen';
@@ -14,6 +14,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import GeneralScreen from './screens/teams/GeneralScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
 import ActivityDetailScreen from './screens/activities/ActivityDetailScreen';
+import AssignmentScreen from './screens/assignments/AssignmentScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -68,16 +69,18 @@ const AppNavigator = () => {
             />
             <Tab.Screen
                 name='assignment'
-                component={AssignmentScreen} options={{
+                component={AssignmentScreen} 
+                options={{
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name='assignment' size={size} color={color} />
                     ),
-                    title: 'Assignment',
+                    title: 'Assignments',
                     headerShown: false,
                 }} />
             <Tab.Screen
                 name='teams'
-                component={TeamsStackScreen} options={{
+                component={TeamsStackScreen} 
+                options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='people-sharp' size={size} color={color} />
                     ),
@@ -86,7 +89,8 @@ const AppNavigator = () => {
                 }} />
             <Tab.Screen
                 name='chat'
-                component={ChatStackScreen} options={{
+                component={ChatStackScreen} 
+                options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='chatbubble-ellipses-outline' size={size} color={color} />
                     ),
@@ -95,7 +99,8 @@ const AppNavigator = () => {
                 }} />
             <Tab.Screen
                 name='more'
-                component={MoreScreen} options={{
+                component={MoreScreen} 
+                options={{
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name='more' size={size} color={color} />
                     ),

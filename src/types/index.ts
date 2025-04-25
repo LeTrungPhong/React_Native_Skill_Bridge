@@ -17,5 +17,15 @@ export interface IActivity {
   title: string;
   content: string;
   timestamp: string;
-  group?: string;
+  group: string;
+}
+
+export interface IAssignment {
+  id: string;
+  title: string;
+  content: string;
+  submittedAt?: string;
+  deadline: string;
+  group: string;
+  score?: number;
 }

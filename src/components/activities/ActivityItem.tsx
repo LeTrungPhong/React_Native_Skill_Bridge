@@ -61,9 +61,7 @@ const ActivityItem = ({ activity, onPress }: ActivityItemProps) => {
         
         <Text style={styles.contentText}>{displayContent}</Text>
         
-        {activity.group && (
-          <Text style={styles.groupInfo}>{activity.group}</Text>
-        )}
+        <Text style={styles.groupInfo}>{activity.group}</Text>
       </View>
     </TouchableOpacity>
   );

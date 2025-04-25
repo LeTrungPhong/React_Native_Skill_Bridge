@@ -41,6 +41,7 @@ const ACTIVITIES: IActivity[] = [
     title: 'System Update',
     content: 'Skill Bridge app was updated to version 2.1.',
     timestamp: '2025-04-19T21:15:00Z',
+    group: 'Project Team A',
   },
   {
     id: '4',

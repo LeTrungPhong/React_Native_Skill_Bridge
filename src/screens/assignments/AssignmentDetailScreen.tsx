@@ -1,31 +1,44 @@
 import React from 'react';
-import Card from '@/src/components/teams/Card';
 import { View, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { IActivity } from '@/src/types';
+import { IAssignment } from '@/src/types';
+import AssignmentCard from '@/src/components/assignments/AssignmentCard';
 
-// Định nghĩa kiểu dữ liệu cho route params
-type ActivityDetailScreenRouteProp = RouteProp<
-  { ActivityDetailScreen: { activity: IActivity }; }, 
-  'ActivityDetailScreen'
+type AssignmentDetailScreenRouteProp = RouteProp<
+  { AssignmentDetailScreen: { assignment: IAssignment }; }, 
+  'AssignmentDetailScreen'
 >;
 
-const ActivityDetailScreen = () => {
-  const route = useRoute<ActivityDetailScreenRouteProp>();
-  const { activity } = route.params;
+const AssignmentDetailScreen = () => {
+  const route = useRoute<AssignmentDetailScreenRouteProp>();
+  const { assignment } = route.params;
   const navigation = useNavigation();
 
   // Ẩn bottom tab bar khi vào màn hình chi tiết
   useFocusEffect(() => {
     // Khi vào màn hình, ẩn tab bar
-    navigation.getParent()?.setOptions({
+    const parent = navigation.getParent();
+    const grandParent = parent?.getParent();
+    parent?.setOptions({
+      tabBarStyle: { display: 'none' }
+    });
+    grandParent?.setOptions({
       tabBarStyle: { display: 'none' }
     });
 
+
     // Khi rời màn hình, hiện lại tab bar
     return () => {
-      navigation.getParent()?.setOptions({
+      parent?.setOptions({
+        tabBarStyle: {
+          paddingTop: 10,
+          paddingBottom: 10,
+          height: 70,
+          borderTopColor: 'gray',
+        },
+      });
+      grandParent?.setOptions({
         tabBarStyle: {
           paddingTop: 10,
           paddingBottom: 10,
@@ -46,12 +59,15 @@ const ActivityDetailScreen = () => {
             <Ionicons name='arrow-back' size={24} color='black' />
         </Pressable>
         <View style={styles.headerInfo}>
-            <Text style={styles.title}>{activity.group}</Text>
+            <Text style={styles.title}>{assignment.group}</Text>
         </View>
       </View>    
 
       <View style={styles.content}>
-        <Card />
+        <AssignmentCard
+          assignment={assignment}
+          onSubmit={() => {}}
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -89,4 +105,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ActivityDetailScreen;
+export default AssignmentDetailScreen;
