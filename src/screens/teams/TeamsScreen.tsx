@@ -2,40 +2,41 @@ import { StyleSheet, FlatList, TouchableOpacity, Button, Modal, TextInput, Scrol
 import { View, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useColorScheme } from '@/src/hooks/useColorScheme';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { TeamItem, Team } from '@/src/components/teams/TeamItem';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { TeamsStackParamList } from '@/src/navigation/type';
 import { AuthContext } from '@/src/context/authContext';
+import api from '@/src/api/axios'; // Import your API utility
 
-const TEAMS: Team[] = [
-  {
-    id: '1',
-    name: 'GVCN',
-    initials: 'G',
-    description: 'Nguyen Van A - CNTT',
-  },
-  {
-    id: '2',
-    name: 'KHDL',
-    initials: 'K',
-    description: 'Nguyen Van A - CNTT',
-  },
-  {
-    id: '3',
-    name: 'AI',
-    initials: 'AI',
-    description: 'Nguyen Van A - CNTT',
-  },
-  {
-    id: '4',
-    name: 'Mobile',
-    initials: 'EP',
-    description: 'Nguyen Van A - CNTT',
-  },
-];
+// const TEAMS: Team[] = [
+//   {
+//     id: '1',
+//     name: 'GVCN',
+//     initials: 'G',
+//     description: 'Nguyen Van A - CNTT',
+//   },
+//   {
+//     id: '2',
+//     name: 'KHDL',
+//     initials: 'K',
+//     description: 'Nguyen Van A - CNTT',
+//   },
+//   {
+//     id: '3',
+//     name: 'AI',
+//     initials: 'AI',
+//     description: 'Nguyen Van A - CNTT',
+//   },
+//   {
+//     id: '4',
+//     name: 'Mobile',
+//     initials: 'EP',
+//     description: 'Nguyen Van A - CNTT',
+//   },
+// ];
 
 type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
 
@@ -76,7 +77,7 @@ interface FormErrorsType {
 
 export default function TeamsScreen() {
   const colorScheme = useColorScheme();
-  const [teams, setTeams] = useState<Team[]>(TEAMS);
+  const [teams, setTeams] = useState<Team[]>();
   const navigation = useNavigation<TeamsScreenNavigationProp>();
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrorsType>({
@@ -109,6 +110,37 @@ export default function TeamsScreen() {
 
   const [state] = useContext(AuthContext);
   console.log('AuthContext state:', state);
+
+  
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        // Simulate fetching data from an API or local storage
+        const data = await api.get('/api/classes') // Replace with your API endpoint
+        // const data = await response.json();
+        // console.log('Fetched teams:', data);
+        if (data && data.data) {
+          // Transform the API response to match the Team interface
+          const transformedData: Team[] = data.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+          }));
+          
+          console.log('Transformed teams data:', transformedData);
+          setTeams(transformedData);
+        }
+        // setTeams(data);
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+      }
+    };
+    // Fetch teams from the server or local storage
+    fetchTeams();
+  }, []);
+
 
   const resetForm = () => {
     setFormData({
@@ -254,18 +286,18 @@ export default function TeamsScreen() {
       }
     });
     
-    // Create a new team object
-    const newTeam: Team = {
-      id: (teams.length + 1).toString(),
-      name: formData.className,
-      initials: formData.className.substring(0, 2).toUpperCase(),
-      description: `Room: ${formData.roomName}, Weeks: ${formData.weeks}`,
-      // Add additional fields if needed in your Team interface
-      // schedule: scheduleData
-    };
+    // // Create a new team object
+    // const newTeam: Team = {
+    //   id: (teams.length + 1).toString(),
+    //   name: formData.className,
+    //   initials: formData.className.substring(0, 2).toUpperCase(),
+    //   description: `Room: ${formData.roomName}, Weeks: ${formData.weeks}`,
+    //   // Add additional fields if needed in your Team interface
+    //   // schedule: scheduleData
+    // };
     
-    // Add the new team to the list
-    setTeams([...teams, newTeam]);
+    // // Add the new team to the list
+    // setTeams([...teams, newTeam]);
     
     // Log the full data for debugging
     console.log('Form submitted successfully:', {
@@ -274,13 +306,19 @@ export default function TeamsScreen() {
       roomName: formData.roomName,
       schedule: scheduleData
     });
-    
+
+    scheduleData.forEach((schedule) => {
+      console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
+    });
+
+
     // Show success message
     Alert.alert('Success', 'New class has been created successfully');
     
     // Reset form and close modal
     resetForm();
     setIsFormVisible(false);
+    // fetchTeams();
   };
 
   const renderTeamItem = ({ item }: { item: Team }) => (
@@ -380,7 +418,7 @@ export default function TeamsScreen() {
         style={styles.list}
       />
       {
-        state.roll === 'Teacher' && (
+        state.roll === 'TEACHER' && (
           <View>
             <TouchableOpacity 
               style={styles.button_add}
@@ -689,4 +727,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 5,
   },
-}); 
+});
+
+function removeVietnameseTones(str: any) {
+  return str.normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/đ/g, "d").replace(/Đ/g, "D");
+}

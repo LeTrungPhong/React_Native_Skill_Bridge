@@ -12,7 +12,9 @@ const AuthProvider = ({ children }) => {
     const [state, setState] = useState({
         user: null,
         token: null,
-        roll: "Teacher",
+        roll: "TEACHER",
+        username: "hoang",
+        id: 1,
     });
 
     return (
