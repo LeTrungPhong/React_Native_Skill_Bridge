@@ -26,6 +26,7 @@ export interface IAssignment {
   content: string;
   submittedAt?: string;
   deadline: string;
+  timestamp?: string;
   group: string;
   score?: number;
 }
