@@ -1,6 +1,9 @@
+import api from '@/src/api/axios';
+import { AuthContext } from '@/src/context/authContext';
 import { RootStackParamList } from '@/src/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 
 type SignInScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignIn'>;
@@ -10,23 +13,48 @@ interface SignInScreenProps {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [state, setState] = useContext(AuthContext);
 
-  const mockUser = {
-    email: 'test',
-    password: '12345',
-  };
+  useEffect(() => {
+    if (state) {
+      console.log('Đã cập nhật token:', state);
+    }
+  }, [state]);
 
-  function handleSignIn() {
-    if (email === mockUser.email && password === mockUser.password) {
-      console.log('Sign in successful!');
+  const handleSignIn = async () => {
+    console.log('Đăng nhập với thông tin:', { username, password });
+
+    try {
+      // Gọi API đăng nhập ở đây
+      if (!username || !password) {
+        alert('Vui lòng nhập tên đăng nhập và mật khẩu.');
+        return;
+      }
+
+      const response = await api.post('/log-in', { username, password });
+      const info = response.data.result.info;
+      // console.log('Đăng nhập thành công:', response.data.result.token);
+      await AsyncStorage.setItem('@auth', JSON.stringify(response.data.result)); // Lưu token vào AsyncStorage
+      // console.log('data', response.data.result);
+      setState({ ...state, token: response.data.result.token, user: {
+        name: info.name,
+        id: info.id,
+        username: info.username,
+        email: info.email,
+        phone: info.phone,
+        role: info.role,
+      } });
+      // console.log('state:', state);
+      // console.log('Đăng nhập thành công:', response.data);
       navigation.navigate('Home');
+
+    } catch (error) {
+      console.error('Lỗi đăng nhập:', error);
+      alert('Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin tài khoản.');
     }
-    else {
-      console.log('Sign in failed!');
-    }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,9 +73,9 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         
         <TextInput
           style={styles.input}
-          placeholder='Email'
-          value={email}
-          onChangeText={setEmail}
+          placeholder='Username'
+          value={username}
+          onChangeText={setUsername}
           autoCapitalize='none'
         />
         
