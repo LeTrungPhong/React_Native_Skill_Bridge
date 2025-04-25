@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tạo instance của axios
 const api = axios.create({
-  baseURL: 'http://192.168.1.5:8082/skillbridge', // thay bằng baseURL backend của bạn
+  baseURL: 'http://192.168.1.5:8082/skillbridge', // thay bằng baseURL backend
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

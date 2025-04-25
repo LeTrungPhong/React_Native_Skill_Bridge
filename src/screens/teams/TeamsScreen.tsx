@@ -111,8 +111,6 @@ export default function TeamsScreen() {
   const [state] = useContext(AuthContext);
   console.log('AuthContext state:', state);
 
-  
-
   useEffect(() => {
     const fetchTeams = async () => {
       try {
@@ -310,6 +308,11 @@ export default function TeamsScreen() {
     scheduleData.forEach((schedule) => {
       console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
     });
+
+    // api.post('/api/classes', {
+    //   name: formData.className,
+    //   numberOfWeeks: formData.weeks,
+      
 
 
     // Show success message
