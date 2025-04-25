@@ -16,7 +16,11 @@ api.interceptors.request.use(async (config) => {
 //   if (token) {
 //     config.headers.Authorization = `Bearer ${token}`;
 //   }
-  config.headers.Authorization = `Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJza2lsbF9icmlkZ2UiLCJzdWIiOiJob2FuZyIsImV4cCI6MTc0NTU1NDQ1NCwiaWF0IjoxNzQ1NTUwODU0LCJqdGkiOiI1Mzk5MDJiMi1iYWYzLTRjM2QtOTEyNS0wZmFhYjVkMTVlNTIiLCJzY29wZSI6IlRFQUNIRVIifQ.cNPMzJHSFexU74dJ7j6uuoSdDyFsxJwvVjDs5QT9PwdzJm62R6ASjyatcNbNOfIY0qoLNBWhdqFvknOwg73Vrw`;
+
+  if (!config.url.endsWith('/register')) {
+    config.headers.Authorization = `Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJza2lsbF9icmlkZ2UiLCJzdWIiOiJob2FuZyIsImV4cCI6MTc0NTU1NDQ1NCwiaWF0IjoxNzQ1NTUwODU0LCJqdGkiOiI1Mzk5MDJiMi1iYWYzLTRjM2QtOTEyNS0wZmFhYjVkMTVlNTIiLCJzY29wZSI6IlRFQUNIRVIifQ.cNPMzJHSFexU74dJ7j6uuoSdDyFsxJwvVjDs5QT9PwdzJm62R6ASjyatcNbNOfIY0qoLNBWhdqFvknOwg73Vrw`;
+  }
+//   config.headers.Authorization = ;
   return config;
 }, (error) => {
   return Promise.reject(error);
