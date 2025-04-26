@@ -1,16 +1,35 @@
+export interface IUser {
+  token: string;
+  info: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    phone: string;
+    role: string;
+  };
+}
+
+export interface IUserAsyncStorage {
+  token: string;
+  info: {
+    id: string;
+    name: string;
+    username: string;
+    email: string;
+    phone: string;
+    role: string;
+  };
+  expiresAt: string;
+}
+
+////////////////
 export type RootStackParamList = {
   Start: undefined;
   SignIn: undefined;
   SignUp: undefined;
   Home: undefined;
 };
-
-export interface IUser {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-}
 
 export interface IActivity {
   id: string;

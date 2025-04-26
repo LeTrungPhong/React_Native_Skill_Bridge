@@ -1,8 +1,9 @@
 import api from '@/src/api/axios';
 import { AuthContext } from '@/src/context/authContext';
-import { RootStackParamList } from '@/src/types';
+import { IUserAsyncStorage, RootStackParamList } from '@/src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { push } from 'expo-router/build/global-state/routing';
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, StatusBar } from 'react-native';
 
@@ -19,40 +20,59 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (state) {
-      console.log('Đã cập nhật token:', state);
+      console.log('Sign In Screen: State updated:', state);
     }
   }, [state]);
 
   const handleSignIn = async () => {
-    console.log('Đăng nhập với thông tin:', { username, password });
+    console.log('Login info:', { username, password });
 
     try {
       // Gọi API đăng nhập ở đây
       if (!username || !password) {
-        alert('Vui lòng nhập tên đăng nhập và mật khẩu.');
+        alert('Please enter your username and password.');
         return;
       }
 
       const response = await api.post('/log-in', { username, password });
-      const info = response.data.result.info;
-      // console.log('Đăng nhập thành công:', response.data.result.token);
-      await AsyncStorage.setItem('@auth', JSON.stringify(response.data.result)); // Lưu token vào AsyncStorage
-      // console.log('data', response.data.result);
-      setState({ ...state, token: response.data.result.token, user: {
-        name: info.name,
-        id: info.id,
-        username: info.username,
-        email: info.email,
-        phone: info.phone,
-        role: info.role,
-      } });
+      const newLogin: IUserAsyncStorage = {
+        ...response.data.result,
+        expiresAt: new Date((new Date()).getTime() + 30 * 60 * 1000).toISOString()
+      };
+      
+      await AsyncStorage.setItem('@auth', JSON.stringify(newLogin)); // Lưu token vào AsyncStorage
+      
+      // Recent logins 
+      const existingLoginsJson = await AsyncStorage.getItem('recentLogins');
+      let recentLogins: IUserAsyncStorage[] = existingLoginsJson ? JSON.parse(existingLoginsJson) : [];
+      const existingLoginId = recentLogins.findIndex((login: IUserAsyncStorage) => login.info.id === newLogin.info.id);
+      if(existingLoginId !== -1){
+        recentLogins[existingLoginId] = newLogin;
+      }else{
+        recentLogins.push(newLogin);
+      }
+      await AsyncStorage.setItem('recentLogins', JSON.stringify(recentLogins.slice(-5)));
+
+      setState({ 
+        ...state, 
+        token: newLogin.token, 
+        info: {
+          name: newLogin.info.name,
+          id: newLogin.info.id,
+          username: newLogin.info.username,
+          email: newLogin.info.email,
+          phone: newLogin.info.phone,
+          role: newLogin.info.role,
+        } 
+      });
+
       // console.log('state:', state);
       // console.log('Đăng nhập thành công:', response.data);
       navigation.navigate('Home');
 
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error);
-      alert('Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin tài khoản.');
+      console.error('Error login:', error);
+      alert('Login failed. Please check your account information.');
     }
   };
 
