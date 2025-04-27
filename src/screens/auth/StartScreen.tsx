@@ -1,6 +1,9 @@
-import { RootStackParamList } from '@/src/types';
+import { AuthContext } from '@/src/context/authContext';
+import { IUser, IUserAsyncStorage, RootStackParamList } from '@/src/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
-import React, { useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; // Sửa import từ đây
+import React, { useCallback, useContext, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
 type StartScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Start'>;
@@ -9,40 +12,94 @@ interface StartScreenProps {
   navigation: StartScreenNavigationProp;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
-  const COLORS = [
-    '#5DADE2', 
-    '#F5B041',
-    '#58D68D',
-    '#BB8FCE',
-    '#EC7063',
-    '#45B39D',
-    '#AF7AC5',
-    '#5499C7',
-    '#52BE80',
-    '#F4D03F',
-  ];
+const getRecentLogins = async () => {
+  try {
+    const existingLoginsJson = await AsyncStorage.getItem('recentLogins');
+    let recentLogins: IUserAsyncStorage[] = existingLoginsJson ? JSON.parse(existingLoginsJson) : [];
 
-  // Get random color
-  const getRandomColor = (): string => {
-    const randomIndex = Math.floor(Math.random() * COLORS.length);
-    return COLORS[randomIndex];
+    const validLogins = recentLogins.filter((login: any) => {
+      const expiresTime = new Date(login.expiresAt);
+      const currentTime = new Date();
+      return expiresTime > currentTime;
+    });
+    
+    console.log('Valid logins after filter:', validLogins);
+    
+    if (validLogins.length !== recentLogins.length) {
+      await AsyncStorage.setItem('recentLogins', JSON.stringify(validLogins));
+    }
+    
+    return validLogins;
+  } catch (error) {
+    console.error('Error getting recent logins:', error);
+    return [];
+  }
+};
+
+const COLORS = [
+  '#5DADE2', 
+  '#F5B041',
+  '#58D68D',
+  '#BB8FCE',
+  '#EC7063',
+  '#45B39D',
+  '#AF7AC5',
+  '#5499C7',
+  '#52BE80',
+  '#F4D03F',
+];
+
+// Get random color
+const getRandomColor = (): string => {
+  const randomIndex = Math.floor(Math.random() * COLORS.length);
+  return COLORS[randomIndex];
+};
+
+const StartScreen = ({ navigation }: StartScreenProps) => {
+  const [state, setState] = useContext(AuthContext);
+  const [users, setUsers] = useState<IUserAsyncStorage[]>([]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRecentLogins = async () => {
+        const recentLogins = await getRecentLogins();
+        setUsers(recentLogins);
+      };
+      
+      fetchRecentLogins();
+      return () => {};
+    }, [])
+  );
+
+  React.useEffect(() => {
+    console.log('Start Screen: State updated:', state);
+  }, [users]);
+
+  const saveAuth = async (user: any) => {
+    try {
+      const loginUser: IUser = {
+        token: user.token,
+        info: {
+          id: user.info.id,
+          name: user.info.name,
+          username: user.info.username,
+          email: user.info.email,
+          phone: user.info.phone,
+          role: user.info.role,
+        },
+      };
+      await AsyncStorage.setItem('@auth', JSON.stringify(loginUser));
+      console.log()
+      setState({ 
+        ...state, 
+        ...loginUser,
+      });
+
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error('Error saving auth:', error);
+    }
   };
-
-  // Mock data for users
-  const users = [
-    { id: 1, name: 'Vo Thanh Tu', email: 'thanhtu@gmail.com', password: '12345' },
-    { id: 2, name: 'Duong Quang Minh Hoang', email: 'hoangduong@gmail.com', password: '12345' },
-    { id: 3, name: 'Nguyen Thanh Trung', email: 'trung@gmail.com', password: '12345' },
-    { id: 4, name: 'Le Trung Phong', email: 'phong@gmail.com', password: '12345' },
-  ];
-
-  const usersWithColors = useMemo(() => {
-    return users.map(user => ({
-      ...user,
-      color: getRandomColor()
-    }));
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -60,21 +117,27 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
           />
         </View>
   
-        {usersWithColors.map((user) => (
-          <TouchableOpacity 
-            key={user.id} style={styles.userItem}
-            onPress={() => navigation.navigate('Home')}
-          >
-            <View style={[styles.avatar, { backgroundColor: user.color }]}>
-              <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.email}>{user.name}</Text>
-              <Text style={styles.userEmail}>{user.email}</Text>
-            </View>
-          </TouchableOpacity>
-          
-        ))}
+        {users && users.length > 0 ? (
+          users.map((user: any, index) => (
+            <TouchableOpacity 
+              key={user.info.id || index} 
+              style={styles.userItem}
+              onPress={() => {
+                saveAuth(user);
+              }}
+            >
+              <View style={[styles.avatar, { backgroundColor: getRandomColor() }]}>
+                <Text style={styles.avatarText}>{user.info.name.charAt(0) || "U"}</Text>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{user.info.name || "User"}</Text>
+                <Text style={styles.username}>{user.info.username || ""}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={styles.noRecentLogins}>No recent logins</Text>
+        )}
       </ScrollView>
       
       <View style={styles.footer}>
@@ -147,11 +210,11 @@ const styles = StyleSheet.create({
   userInfo: {
     marginLeft: 15,
   },
-  email: {
+  name: {
     fontSize: 16,
     fontWeight: '500',
   },
-  userEmail: {
+  username: {
     fontSize: 14,
     color: '#666',
   },
@@ -178,6 +241,12 @@ const styles = StyleSheet.create({
   signUpButtonText: {
     fontSize: 16,
     color: '#fff',
+  },
+  noRecentLogins: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
+    fontSize: 16,
   },
 });
 

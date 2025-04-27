@@ -12,7 +12,7 @@ const AuthProvider = ({ children }) => {
    
     // global state
     const [state, setState] = useState({
-        user: {
+        info: {
             id: null,
             username: null,
             name: null,
