@@ -1,5 +1,6 @@
 import api from "@/src/api/axios";
 import Attendance from "@/src/components/teams/Attendance";
+import Lesson from "@/src/components/teams/Lesson";
 import { AuthContext } from "@/src/context/authContext";
 import { GeneralScreenRouteProp } from "@/src/navigation/type";
 import { useRoute } from "@react-navigation/native";
@@ -15,12 +16,18 @@ export interface AttendanceRecord {
   status: AttendanceStatus;
 }
 
-
+export interface LessonRecord {
+    lessonDate: string;
+    startTime: string;
+    endTime: string;
+}
 
 export default function AttendanceScreen() {
     const [state] = useContext(AuthContext);
     const [data, setData] = useState<AttendanceRecord[]>([]);
-    // console.log("AttendanceScreen state:", state);
+    const [lessonData, setLessonData] = useState<LessonRecord[]>([]);
+
+    console.log("AttendanceScreen state:", state);
 
     const route = useRoute<GeneralScreenRouteProp>();
     const { team } = route.params;
@@ -28,16 +35,31 @@ export default function AttendanceScreen() {
 
     const fetchAttendanceData = async () => {
         try {
-            const response = await api.get(`/api/attendance/student/${state.user.id}/${team.id}`);
-            // console.log("Attendance data:", response.data);
-            if (response && response.data) {
+            if (state.user.role === "STUDENT") {
+                const response = await api.get(`/api/attendance/student/${state.user.id}/${team.id}`);
                 // console.log("Attendance data:", response.data);
-                const attendanceRecords: AttendanceRecord[] = response.data.map((record: any) => ({
-                    date: record.lessonDate,
-                    time: record.checkinDate,
-                    status: record.status,
-                }));
-                setData(attendanceRecords);
+                if (response && response.data) {
+                    // console.log("Attendance data:", response.data);
+                    const attendanceRecords: AttendanceRecord[] = response.data.map((record: any) => ({
+                        date: record.lessonDate,
+                        time: record.checkinDate,
+                        status: record.status,
+                    }));
+                    setData(attendanceRecords);
+                }
+            } else if (state.user.role === "TEACHER") {
+                const response = await api.get(`/api/lesson/${team.id}`);
+                // console.log("Lesson data:", response.data);
+
+                if (response && response.data) {
+                    const lessonRecords: LessonRecord[] = response.data.map((record: any) => ({
+                        lessonDate: record.lessonDate,
+                        startTime: record.startTime,
+                        endTime: record.endTime,
+                    }));
+                    setLessonData(lessonRecords);
+                }
+
             }
         } catch (error) { 
             console.error("Error fetching attendance data:", error);
@@ -50,11 +72,18 @@ export default function AttendanceScreen() {
     }, []); 
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            {data.map((record, index) => (
-                <Attendance key={index} data={record} />
-            ))}
-        </ScrollView>
+        state.user.role === "STUDENT" ? (
+            <ScrollView contentContainerStyle={styles.container}>
+                {data.map((record, index) => (
+                    <Attendance key={index} data={record} />
+                ))}
+            </ScrollView>) : (
+            <ScrollView contentContainerStyle={styles.container}>
+                {lessonData.map((record, index) => (
+                    <Lesson key={index} data={record} />
+                ))}
+            </ScrollView>
+        )
     );
 }
 
