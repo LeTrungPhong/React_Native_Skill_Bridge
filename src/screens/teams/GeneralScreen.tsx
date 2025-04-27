@@ -58,9 +58,9 @@ export default function GeneralScreen() {
                         fontWeight: 'bold',
                     }, 
                 }}>
-                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} />
-                <TobTab.Screen name="AssignmentScreen" component={AssignmentScreen} options={{ title: 'Assignment' }} />
-                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} />
+                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} initialParams={{ team }} />
+                <TobTab.Screen name="AssignmentScreen" component={AssignmentScreen} options={{ title: 'Assignment' }} initialParams={{ team }} />
+                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} initialParams={{ team }} />
             </TobTab.Navigator>
         </View>
     );
