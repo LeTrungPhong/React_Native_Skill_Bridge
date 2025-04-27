@@ -18,7 +18,7 @@ const AuthProvider = ({ children }) => {
             name: null,
             email: null,
             phone: null,
-            roll: null,
+            role: null,
         },
         token: "",
         // roll: "TEACHER",
