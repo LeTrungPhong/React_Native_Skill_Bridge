@@ -106,16 +106,16 @@ export default function TeamsScreen() {
           }));
 
           console.log('Transformed teams data:', transformedData);
-          setTeams(transformedData); 
+          setTeams(transformedData);
         }
-      } else if (state.user.role == 'STUDENT') { 
+      } else if (state.user.role == 'STUDENT') {
         const data = await api.get('/api/classes/student') // Replace with your API endpoint
         // const data = await response.json();
         console.log('Fetched teams:', data.data.result);
         if (data && data.data && data.data.result) {
           // Transform the API response to match the Team interface
           const transformedData: Team[] = data.data.result.map((item: any) => ({
-            id: item.id, 
+            id: item.id,
             name: item.name,
             initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
             description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
@@ -139,12 +139,12 @@ export default function TeamsScreen() {
     }
 
     setSearchError('');
-    
+
     try {
       // Gọi API để tìm kiếm lớp học theo ID
       const response = await api.get(`/api/classes/${classIdToJoin}`);
       console.log('Found class:', response.data)
-      
+
       if (response.data) {
         const classData = response.data;
         // Chuyển đổi dữ liệu API thành định dạng Team
@@ -168,23 +168,23 @@ export default function TeamsScreen() {
   // Thêm hàm xử lý tham gia lớp học
   const handleJoinClass = async () => {
     if (!foundClass) return;
-    
+
     try {
       // Gọi API để tham gia lớp học
       await api.post(`/api/enrollments`, {
         'classId': foundClass.id,
       });
-      
+
       // Cập nhật danh sách lớp học
       await fetchTeams();
-      
+
       // Hiển thị thông báo thành công
       Alert.alert(
         'Thành công',
         `Bạn đã tham gia lớp ${foundClass.name}`,
         [{ text: 'OK' }]
       );
-      
+
       // Reset form và đóng modal
       setFoundClass(null);
       setClassIdToJoin('');
@@ -692,7 +692,7 @@ export default function TeamsScreen() {
             <View style={styles.searchClassContainer}>
               <TextInput
                 style={[
-                  styles.input, 
+                  styles.input,
                   styles.searchClassInput,
                   searchError ? styles.inputError : null
                 ]}
@@ -703,7 +703,7 @@ export default function TeamsScreen() {
                   if (searchError) setSearchError('');
                 }}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.searchClassButton}
                 onPress={searchClassById}
               >
@@ -725,7 +725,7 @@ export default function TeamsScreen() {
                   <Text style={styles.classDescription}>{foundClass.description}</Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.joinButton}
                 onPress={handleJoinClass}
               >

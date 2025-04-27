@@ -15,6 +15,7 @@ import GeneralScreen from './screens/teams/GeneralScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
 import ActivityDetailScreen from './screens/activities/ActivityDetailScreen';
 import AssignmentScreen from './screens/assignments/AssignmentScreen';
+import LessonDetailScreen from './screens/teams/LessonDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,6 +34,7 @@ const TeamsStackScreen = () => (
     <TeamsStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
         <TeamsStack.Screen name='TeamsList' component={TeamsScreen}  />
         <TeamsStack.Screen name='GeneralScreen' component={GeneralScreen}  />
+        <TeamsStack.Screen name='LessonDetailScreen' component={LessonDetailScreen}  />
     </TeamsStack.Navigator>
 );
 

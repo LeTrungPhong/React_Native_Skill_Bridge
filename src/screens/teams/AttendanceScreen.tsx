@@ -17,6 +17,7 @@ export interface AttendanceRecord {
 }
 
 export interface LessonRecord {
+    id: string;
     lessonDate: string;
     startTime: string;
     endTime: string;
@@ -56,6 +57,7 @@ export default function AttendanceScreen() {
                         lessonDate: record.lessonDate,
                         startTime: record.startTime,
                         endTime: record.endTime,
+                        id: record.id,
                     }));
                     setLessonData(lessonRecords);
                 }

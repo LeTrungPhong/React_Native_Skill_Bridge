@@ -10,6 +10,7 @@ import PostScreen from './PostScreen';
 import AssignmentScreen from './AssignmentScreen';
 import AttendanceScreen from './AttendanceScreen';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import LessonDetailScreen from './LessonDetailScreen';
 
 // Định nghĩa kiểu cho params
 

@@ -1,14 +1,30 @@
 import { LessonRecord } from "@/src/screens/teams/AttendanceScreen";
-import { StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function Lesson({ data }: { data: LessonRecord }) {
+
+    const navigation = useNavigation<any>();
+
+    const handleSelectLesson = () => {
+        // Handle lesson selection here
+        console.log("Lesson selected:", data);
+
+        navigation.navigate('LessonDetailScreen', {
+            lessonId: data.id,
+            date: data.lessonDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+        });
+    }
+
     return (
-        <View style={styles.container}>
+        <TouchableOpacity onPress={handleSelectLesson} style={styles.container}>
             <View>
                 <Text style={styles.date}>{data.lessonDate}</Text>
                 <Text style={styles.time}>{`${data.startTime} - ${data.endTime}`}</Text>
             </View>
-        </View>
+        </TouchableOpacity>
     )
 }
 
