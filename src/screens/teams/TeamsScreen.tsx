@@ -11,36 +11,9 @@ import { TeamsStackParamList } from '@/src/navigation/type';
 import { AuthContext } from '@/src/context/authContext';
 import api from '@/src/api/axios'; // Import your API utility
 
-// const TEAMS: Team[] = [
-//   {
-//     id: '1',
-//     name: 'GVCN',
-//     initials: 'G',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '2',
-//     name: 'KHDL',
-//     initials: 'K',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '3',
-//     name: 'AI',
-//     initials: 'AI',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '4',
-//     name: 'Mobile',
-//     initials: 'EP',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-// ];
-
 type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
 
-type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 type TimeField = 'startHour' | 'startMinute' | 'endHour' | 'endMinute';
 
 interface DaySchedule {
@@ -91,54 +64,72 @@ export default function TeamsScreen() {
     weeks: '',
     roomName: '',
     days: {
-      monday: false,
-      tuesday: false,
-      wednesday: false,
-      thursday: false,
-      friday: false,
-      saturday: false,
+      Monday: false,
+      Tuesday: false,
+      Wednesday: false,
+      Thursday: false,
+      Friday: false,
+      Saturday: false,
     },
     times: {
-      monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
     }
   });
 
   const [state] = useContext(AuthContext);
   console.log('AuthContext state:', state);
 
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        // Simulate fetching data from an API or local storage
-        const data = await api.get('/api/classes') // Replace with your API endpoint
+  const fetchTeams = async () => {
+    try {
+      // Simulate fetching data from an API or local storage
+      if (state.user.role == 'TEACHER') {
+        const data = await api.get('/api/classes/teacher') // Replace with your API endpoint
         // const data = await response.json();
-        // console.log('Fetched teams:', data);
-        if (data && data.data) {
+        console.log('Fetched teams:', data);
+        if (data && data.data && data.data.result) {
           // Transform the API response to match the Team interface
-          const transformedData: Team[] = data.data.map((item: any) => ({
+          const transformedData: Team[] = data.data.result.map((item: any) => ({
             id: item.id,
             name: item.name,
             initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
             description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
           }));
-          
+
           console.log('Transformed teams data:', transformedData);
           setTeams(transformedData);
         }
-        // setTeams(data);
-      } catch (error) {
-        console.error('Error fetching teams:', error);
+      } else if (state.user.role == 'STUDENT') {
+        const data = await api.get('/api/classes') // Replace with your API endpoint
+        // const data = await response.json();
+        console.log('Fetched teams:', data.data.result);
+        if (data && data.data && data.data.result) {
+          // Transform the API response to match the Team interface
+          const transformedData: Team[] = data.data.result.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+          }));
+
+          console.log('Transformed teams data:', transformedData);
+          setTeams(transformedData);
+        }
       }
-    };
+      // setTeams(data);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
+  };
+
+  useEffect(() => {
     // Fetch teams from the server or local storage
     fetchTeams();
   }, []);
-
 
   const resetForm = () => {
     setFormData({
@@ -146,20 +137,20 @@ export default function TeamsScreen() {
       weeks: '',
       roomName: '',
       days: {
-        monday: false,
-        tuesday: false,
-        wednesday: false,
-        thursday: false,
-        friday: false,
-        saturday: false,
+        Monday: false,
+        Tuesday: false,
+        Wednesday: false,
+        Thursday: false,
+        Friday: false,
+        Saturday: false,
       },
       times: {
-        monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
       }
     });
     setFormErrors({
@@ -178,7 +169,7 @@ export default function TeamsScreen() {
         [day]: !formData.days[day]
       }
     });
-    
+
     // Clear any schedule error when a day is selected
     if (formErrors.schedule && !formData.days[day]) {
       setFormErrors({
@@ -193,7 +184,7 @@ export default function TeamsScreen() {
     if (value && !/^\d+$/.test(value)) {
       return;
     }
-    
+
     setFormData({
       ...formData,
       times: {
@@ -244,7 +235,7 @@ export default function TeamsScreen() {
     } else {
       // Validate time fields for selected days
       const daysWithMissingTimes: DayOfWeek[] = [];
-      
+
       (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
         if (formData.days[day]) {
           const times = formData.times[day];
@@ -254,7 +245,7 @@ export default function TeamsScreen() {
           }
         }
       });
-      
+
       if (daysWithMissingTimes.length > 0) {
         newErrors.schedule = `Please complete time fields for: ${daysWithMissingTimes.join(', ')}`;
       }
@@ -264,15 +255,15 @@ export default function TeamsScreen() {
     return isValid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert('Validation Error', 'Please check the form for errors');
       return;
     }
-    
+
     // Convert form data to the desired format
     const scheduleData: ScheduleItem[] = [];
-    
+
     (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
       if (formData.days[day]) {
         const times = formData.times[day];
@@ -283,7 +274,7 @@ export default function TeamsScreen() {
         });
       }
     });
-    
+
     // // Create a new team object
     // const newTeam: Team = {
     //   id: (teams.length + 1).toString(),
@@ -293,10 +284,10 @@ export default function TeamsScreen() {
     //   // Add additional fields if needed in your Team interface
     //   // schedule: scheduleData
     // };
-    
+
     // // Add the new team to the list
     // setTeams([...teams, newTeam]);
-    
+
     // Log the full data for debugging
     console.log('Form submitted successfully:', {
       className: formData.className,
@@ -309,15 +300,31 @@ export default function TeamsScreen() {
       console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
     });
 
-    // api.post('/api/classes', {
-    //   name: formData.className,
-    //   numberOfWeeks: formData.weeks,
-      
+    api.post('/api/classes', {
+      name: formData.className,
+      numberOfWeeks: formData.weeks,
+      dateStudy: scheduleData.reduce((result, { day, startTime, endTime }) => {
+        result[day] = {
+          startTime: `${startTime}:00`,
+          endTime: `${endTime}:00`
+        };
+        return result;
+      }, {} as Record<string, { startTime: string; endTime: string }>)
+    });
 
+    // const res = await api.get('/api/classes/teacher');
+    // setTeams(res.data.result.map((item: any) => ({
+    //     id: item.id,
+    //     name: item.name,
+    //     initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+    //     description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+    //   })));
+
+    fetchTeams();
 
     // Show success message
     Alert.alert('Success', 'New class has been created successfully');
-    
+
     // Reset form and close modal
     resetForm();
     setIsFormVisible(false);
@@ -337,7 +344,7 @@ export default function TeamsScreen() {
 
   const renderTimeInputs = (day: DayOfWeek) => {
     if (!formData.days[day]) return null;
-    
+
     return (
       <View style={styles.timeInputContainer}>
         <View style={styles.timeField}>
@@ -362,7 +369,7 @@ export default function TeamsScreen() {
             />
           </View>
         </View>
-        
+
         <View style={styles.timeField}>
           <Text style={styles.timeLabel}>End:</Text>
           <View style={styles.timeInputWrapper}>
@@ -421,9 +428,9 @@ export default function TeamsScreen() {
         style={styles.list}
       />
       {
-        state.roll === 'TEACHER' && (
+        state.user.role === 'TEACHER' && (
           <View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.button_add}
               onPress={() => setIsFormVisible(true)}
             >
@@ -445,7 +452,7 @@ export default function TeamsScreen() {
               <Ionicons name="close" size={24} />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView>
             <View style={styles.formField}>
               <Text style={styles.inputLabel}>Class Name</Text>
@@ -454,9 +461,9 @@ export default function TeamsScreen() {
                 placeholder="Enter class name"
                 value={formData.className}
                 onChangeText={(text) => {
-                  setFormData({...formData, className: text});
+                  setFormData({ ...formData, className: text });
                   if (formErrors.className) {
-                    setFormErrors({...formErrors, className: ''});
+                    setFormErrors({ ...formErrors, className: '' });
                   }
                 }}
               />
@@ -471,9 +478,9 @@ export default function TeamsScreen() {
                 keyboardType="number-pad"
                 value={formData.weeks}
                 onChangeText={(text) => {
-                  setFormData({...formData, weeks: text});
+                  setFormData({ ...formData, weeks: text });
                   if (formErrors.weeks) {
-                    setFormErrors({...formErrors, weeks: ''});
+                    setFormErrors({ ...formErrors, weeks: '' });
                   }
                 }}
               />
@@ -487,86 +494,86 @@ export default function TeamsScreen() {
                 placeholder="Enter room name"
                 value={formData.roomName}
                 onChangeText={(text) => {
-                  setFormData({...formData, roomName: text});
+                  setFormData({ ...formData, roomName: text });
                   if (formErrors.roomName) {
-                    setFormErrors({...formErrors, roomName: ''});
+                    setFormErrors({ ...formErrors, roomName: '' });
                   }
                 }}
               />
               {formErrors.roomName ? <Text style={styles.errorText}>{formErrors.roomName}</Text> : null}
             </View>
 
-            <Text style={[styles.inputLabel, {marginTop: 20}]}>Class Schedule</Text>
+            <Text style={[styles.inputLabel, { marginTop: 20 }]}>Class Schedule</Text>
             {formErrors.schedule ? <Text style={styles.errorText}>{formErrors.schedule}</Text> : null}
-            
+
             {/* Days of week */}
             <View style={styles.daysContainer}>
               {/* Monday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Monday</Text>
                 <Switch
-                  value={formData.days.monday}
-                  onValueChange={() => toggleDay('monday')}
+                  value={formData.days.Monday}
+                  onValueChange={() => toggleDay('Monday')}
                 />
               </View>
-              {renderTimeInputs('monday')}
-              
+              {renderTimeInputs('Monday')}
+
               {/* Tuesday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Tuesday</Text>
                 <Switch
-                  value={formData.days.tuesday}
-                  onValueChange={() => toggleDay('tuesday')}
+                  value={formData.days.Tuesday}
+                  onValueChange={() => toggleDay('Tuesday')}
                 />
               </View>
-              {renderTimeInputs('tuesday')}
-              
+              {renderTimeInputs('Tuesday')}
+
               {/* Wednesday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Wednesday</Text>
                 <Switch
-                  value={formData.days.wednesday}
-                  onValueChange={() => toggleDay('wednesday')}
+                  value={formData.days.Wednesday}
+                  onValueChange={() => toggleDay('Wednesday')}
                 />
               </View>
-              {renderTimeInputs('wednesday')}
-              
+              {renderTimeInputs('Wednesday')}
+
               {/* Thursday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Thursday</Text>
                 <Switch
-                  value={formData.days.thursday}
-                  onValueChange={() => toggleDay('thursday')}
+                  value={formData.days.Thursday}
+                  onValueChange={() => toggleDay('Thursday')}
                 />
               </View>
-              {renderTimeInputs('thursday')}
-              
+              {renderTimeInputs('Thursday')}
+
               {/* Friday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Friday</Text>
                 <Switch
-                  value={formData.days.friday}
-                  onValueChange={() => toggleDay('friday')}
+                  value={formData.days.Friday}
+                  onValueChange={() => toggleDay('Friday')}
                 />
               </View>
-              {renderTimeInputs('friday')}
-              
+              {renderTimeInputs('Friday')}
+
               {/* Saturday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Saturday</Text>
                 <Switch
-                  value={formData.days.saturday}
-                  onValueChange={() => toggleDay('saturday')}
+                  value={formData.days.Saturday}
+                  onValueChange={() => toggleDay('Saturday')}
                 />
               </View>
-              {renderTimeInputs('saturday')}
+              {renderTimeInputs('Saturday')}
             </View>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
               <Text style={styles.submitButtonText}>Create Class</Text>
             </TouchableOpacity>
-            
-            <View style={{height: 50}} />
+
+            <View style={{ height: 50 }} />
           </ScrollView>
         </SafeAreaView>
       </Modal>
@@ -734,6 +741,6 @@ const styles = StyleSheet.create({
 
 function removeVietnameseTones(str: any) {
   return str.normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/đ/g, "d").replace(/Đ/g, "D");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "D");
 }
