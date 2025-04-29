@@ -92,7 +92,7 @@ export default function TeamsScreen() {
   const fetchTeams = async () => {
     try {
       // Simulate fetching data from an API or local storage
-      if (state.user.role == 'TEACHER') {
+      if (state.info.role == 'TEACHER') {
         const data = await api.get('/api/classes/teacher') // Replace with your API endpoint
         // const data = await response.json();
         console.log('Fetched teams:', data);
@@ -108,7 +108,7 @@ export default function TeamsScreen() {
           console.log('Transformed teams data:', transformedData);
           setTeams(transformedData);
         }
-      } else if (state.user.role == 'STUDENT') {
+      } else if (state.info.role == 'STUDENT') {
         const data = await api.get('/api/classes/student') // Replace with your API endpoint
         // const data = await response.json();
         console.log('Fetched teams:', data.data.result);
@@ -508,7 +508,7 @@ export default function TeamsScreen() {
         style={styles.list}
       />
       {
-        state.user.role === 'TEACHER' ? (
+        state.info.role === 'TEACHER' ? (
           <View>
             <TouchableOpacity
               style={styles.button_add}

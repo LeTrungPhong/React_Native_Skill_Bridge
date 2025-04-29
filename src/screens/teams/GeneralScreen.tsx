@@ -43,9 +43,9 @@ const GeneralTabs = ({ route }: any) => {
                         fontWeight: 'bold',
                     }, 
                 }}>
-                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} />
-                <TobTab.Screen name="TeamAssignmentScreen" component={TeamAssignmentScreen} options={{ title: 'Assignment' }} />
-                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} />
+                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} initialParams={{ team }} />
+                <TobTab.Screen name="TeamAssignmentScreen" component={TeamAssignmentScreen} options={{ title: 'Assignment' }} initialParams={{ team }}/>
+                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} initialParams={{ team }} />
             </TobTab.Navigator>
         </View>
     );

@@ -36,8 +36,8 @@ export default function AttendanceScreen() {
 
     const fetchAttendanceData = async () => {
         try {
-            if (state.user.role === "STUDENT") {
-                const response = await api.get(`/api/attendance/student/${state.user.id}/${team.id}`);
+            if (state.info.role === "STUDENT") {
+                const response = await api.get(`/api/attendance/student/${state.info.id}/${team.id}`);
                 // console.log("Attendance data:", response.data);
                 if (response && response.data) {
                     // console.log("Attendance data:", response.data);
@@ -48,7 +48,7 @@ export default function AttendanceScreen() {
                     }));
                     setData(attendanceRecords);
                 }
-            } else if (state.user.role === "TEACHER") {
+            } else if (state.info.role === "TEACHER") {
                 const response = await api.get(`/api/lesson/${team.id}`);
                 // console.log("Lesson data:", response.data);
 
@@ -74,7 +74,7 @@ export default function AttendanceScreen() {
     }, []); 
 
     return (
-        state.user.role === "STUDENT" ? (
+        state.info.role === "STUDENT" ? (
             <ScrollView contentContainerStyle={styles.container}>
                 {data.map((record, index) => (
                     <Attendance key={index} data={record} />
