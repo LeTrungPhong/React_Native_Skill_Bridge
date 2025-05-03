@@ -1,6 +1,11 @@
 import { RootStackParamList } from '@/src/types';
 import { StackNavigationProp } from '@react-navigation/stack';
+<<<<<<< Updated upstream
 import React, { useMemo } from 'react';
+=======
+import { useFocusEffect } from '@react-navigation/native'; // Sửa import từ đây
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+>>>>>>> Stashed changes
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
 type StartScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Start'>;
@@ -23,10 +28,95 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
     '#F4D03F',
   ];
 
+<<<<<<< Updated upstream
   // Get random color
   const getRandomColor = (): string => {
     const randomIndex = Math.floor(Math.random() * COLORS.length);
     return COLORS[randomIndex];
+=======
+    const validLogins = recentLogins.filter((login: any) => {
+      const expiresTime = new Date(login.expiresAt);
+      const currentTime = new Date();
+      return expiresTime > currentTime;
+    });
+    
+    console.log('Valid logins after filter:', validLogins);
+    
+    if (validLogins.length !== recentLogins.length) {
+      await AsyncStorage.setItem('recentLogins', JSON.stringify(validLogins));
+    }
+    
+    return validLogins;
+  } catch (error) {
+    console.error('Error getting recent logins:', error);
+    return [];
+  }
+};
+
+const COLORS = [
+  '#5DADE2', 
+  '#F5B041',
+  '#58D68D',
+  '#BB8FCE',
+  '#EC7063',
+  '#45B39D',
+  '#AF7AC5',
+  '#5499C7',
+  '#52BE80',
+  '#F4D03F',
+];
+
+// Get random color
+const getRandomColor = (): string => {
+  const randomIndex = Math.floor(Math.random() * COLORS.length);
+  return COLORS[randomIndex];
+};
+
+const StartScreen = ({ navigation }: StartScreenProps) => {
+  const [state, setState] = useContext(AuthContext);
+  const [users, setUsers] = useState<IUserAsyncStorage[]>([]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRecentLogins = async () => {
+        const recentLogins = await getRecentLogins();
+        setUsers(recentLogins);
+      };
+      
+      fetchRecentLogins();
+      return () => {};
+    }, [])
+  );
+
+  useEffect(() => {
+    console.log('Start Screen: State updated:', state);
+  }, [users]);
+
+  const saveAuth = async (user: any) => {
+    try {
+      const loginUser: IUser = {
+        token: user.token,
+        info: {
+          id: user.info.id,
+          name: user.info.name,
+          username: user.info.username,
+          email: user.info.email,
+          phone: user.info.phone,
+          role: user.info.role,
+        },
+      };
+      await AsyncStorage.setItem('@auth', JSON.stringify(loginUser));
+      console.log()
+      setState({ 
+        ...state, 
+        ...loginUser,
+      });
+
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error('Error saving auth:', error);
+    }
+>>>>>>> Stashed changes
   };
 
   // Mock data for users
@@ -60,6 +150,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
           />
         </View>
   
+<<<<<<< Updated upstream
         {usersWithColors.map((user) => (
           <TouchableOpacity 
             key={user.id} style={styles.userItem}
@@ -75,6 +166,29 @@ const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
           </TouchableOpacity>
           
         ))}
+=======
+        {users && users.length > 0 ? (
+          users.map((user: any, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.userItem}
+              onPress={() => {
+                saveAuth(user);
+              }}
+            >
+              <View style={[styles.avatar, { backgroundColor: getRandomColor() }]}>
+                <Text style={styles.avatarText}>{user.info.name.charAt(0) || "U"}</Text>
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{user.info.name || "User"}</Text>
+                <Text style={styles.username}>{user.info.username || ""}</Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={styles.noRecentLogins}>No recent logins</Text>
+        )}
+>>>>>>> Stashed changes
       </ScrollView>
       
       <View style={styles.footer}>

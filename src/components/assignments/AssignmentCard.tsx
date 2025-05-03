@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { IAssignment } from '@/src/types';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { IDemooAssignment } from '@/src/types';
 
 interface AssignmentCardProps {
-  assignment: IAssignment;
+  assignment: IDemooAssignment;
   onSubmit?: (id: string) => void;
 }
 

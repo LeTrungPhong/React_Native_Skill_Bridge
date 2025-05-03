@@ -9,18 +9,18 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { IAssignment } from '@/src/types';
+import { IDemooAssignment } from '@/src/types';
 import AssignmentItem from '@/src/components/assignments/AssignmentItem';
 
 type OverdueScreenNavigationProp = StackNavigationProp<
   { 
     AssignmentTabs: undefined; 
-    AssignmentDetailScreen: { assignment: IAssignment };
+    AssignmentDetailScreen: { assignment: IDemooAssignment };
   }, 
   'AssignmentTabs'
 >;
 
-const ASSIGNMENTS: IAssignment[] = [
+const ASSIGNMENTS: IDemooAssignment[] = [
   {
     id: '1',
     title: 'Weekly Reflection',
@@ -39,10 +39,10 @@ const ASSIGNMENTS: IAssignment[] = [
 
 const OverdueScreen = () => {
   const colorScheme = useColorScheme();
-  const [assignments] = useState<IAssignment[]>(ASSIGNMENTS);
+  const [assignments] = useState<IDemooAssignment[]>(ASSIGNMENTS);
   const navigation = useNavigation<OverdueScreenNavigationProp>();
 
-  const renderAssignmentItem = ({ item }: { item: IAssignment }) => (
+  const renderAssignmentItem = ({ item }: { item: IDemooAssignment }) => (
     <AssignmentItem
       assignment={item} 
       onPress={() => {

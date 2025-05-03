@@ -1,4 +1,4 @@
-import api from '@/src/api/axios';
+import { apiJson } from '@/src/api/axios';
 import { AuthContext } from '@/src/context/authContext';
 import { RootStackParamList } from '@/src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,6 +33,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         return;
       }
 
+<<<<<<< Updated upstream
       const response = await api.post('/log-in', { username, password });
       const info = response.data.result.info;
       // console.log('Đăng nhập thành công:', response.data.result.token);
@@ -46,6 +47,40 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         phone: info.phone,
         role: info.role,
       } });
+=======
+      const response = await apiJson.post('/log-in', { username, password });
+      const newLogin: IUserAsyncStorage = {
+        ...response.data.result,
+        expiresAt: new Date((new Date()).getTime() + 30 * 60 * 1000).toISOString()
+      };
+      
+      await AsyncStorage.setItem('@auth', JSON.stringify(newLogin)); // Lưu token vào AsyncStorage
+      
+      // Recent logins 
+      const existingLoginsJson = await AsyncStorage.getItem('recentLogins');
+      let recentLogins: IUserAsyncStorage[] = existingLoginsJson ? JSON.parse(existingLoginsJson) : [];
+      const existingLoginId = recentLogins.findIndex((login: IUserAsyncStorage) => login.info.username === newLogin.info.username);
+      if(existingLoginId !== -1){
+        recentLogins[existingLoginId] = newLogin;
+      }else{
+        recentLogins.push(newLogin);
+      }
+      await AsyncStorage.setItem('recentLogins', JSON.stringify(recentLogins.slice(-5)));
+
+      setState({ 
+        ...state, 
+        token: newLogin.token, 
+        info: {
+          name: newLogin.info.name,
+          id: newLogin.info.id,
+          username: newLogin.info.username,
+          email: newLogin.info.email,
+          phone: newLogin.info.phone,
+          role: newLogin.info.role,
+        } 
+      });
+
+>>>>>>> Stashed changes
       // console.log('state:', state);
       // console.log('Đăng nhập thành công:', response.data);
       navigation.navigate('Home');

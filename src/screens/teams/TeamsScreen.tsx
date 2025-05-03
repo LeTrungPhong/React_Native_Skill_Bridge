@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { TeamsStackParamList } from '@/src/navigation/type';
 import { AuthContext } from '@/src/context/authContext';
-import api from '@/src/api/axios'; // Import your API utility
+import { apiJson } from '@/src/api/axios'; // Import your API utility
 
 // const TEAMS: Team[] = [
 //   {
@@ -111,6 +111,126 @@ export default function TeamsScreen() {
   const [state] = useContext(AuthContext);
   console.log('AuthContext state:', state);
 
+<<<<<<< Updated upstream
+=======
+  const fetchTeams = async () => {
+    try {
+      // Simulate fetching data from an API or local storage
+      if (state.info.role == 'TEACHER') {
+        const data = await apiJson.get('/api/classes/teacher') // Replace with your API endpoint
+        // const data = await response.json();
+        console.log('Fetched teams:', data);
+        if (data && data.data && data.data.result) {
+          // Transform the API response to match the Team interface
+          const transformedData: Team[] = data.data.result.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+          }));
+
+          console.log('Transformed teams data:', transformedData);
+          setTeams(transformedData);
+        }
+      } else if (state.info.role == 'STUDENT') {
+        const data = await apiJson.get('/api/classes/student') // Replace with your API endpoint
+        // const data = await response.json();
+        console.log('Fetched teams:', data.data.result);
+        if (data && data.data && data.data.result) {
+          // Transform the API response to match the Team interface
+          const transformedData: Team[] = data.data.result.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+          }));
+
+          console.log('Transformed teams data:', transformedData);
+          setTeams(transformedData);
+        }
+      }
+      // setTeams(data);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    }
+  };
+
+  // Thêm hàm tìm kiếm lớp học theo ID
+  const searchClassById = async () => {
+    if (!classIdToJoin.trim()) {
+      setSearchError('Vui lòng nhập ID lớp học');
+      return;
+    }
+
+    setSearchError('');
+
+    try {
+      // Gọi API để tìm kiếm lớp học theo ID
+      const response = await apiJson.get(`/api/classes/${classIdToJoin}`);
+      console.log('Found class:', response.data)
+
+      if (response.data) {
+        const classData = response.data;
+        // Chuyển đổi dữ liệu API thành định dạng Team
+        setFoundClass({
+          id: classData.id,
+          name: classData.name,
+          initials: (removeVietnameseTones(classData.name || '')).substring(0, 2).toUpperCase(),
+          description: `Room: ${classData.lessons && classData.lessons[0] ? classData.lessons[0].room : 'N/A'}, Weeks: ${classData.numberOfWeeks || 'N/A'}`,
+        });
+      } else {
+        setSearchError('Không tìm thấy lớp học với ID đã nhập');
+        setFoundClass(null);
+      }
+    } catch (error) {
+      console.error('Error searching for class:', error);
+      setSearchError('Lớp không tồn tại hoặc đã xảy ra lỗi khi tìm kiếm. Vui lòng thử lại.');
+      setFoundClass(null);
+    }
+  };
+
+  // Thêm hàm xử lý tham gia lớp học
+  const handleJoinClass = async () => {
+    if (!foundClass) return;
+
+    try {
+      // Gọi API để tham gia lớp học
+      await apiJson.post(`/api/enrollments`, {
+        'classId': foundClass.id,
+      });
+
+      // Cập nhật danh sách lớp học
+      await fetchTeams();
+
+      // Hiển thị thông báo thành công
+      Alert.alert(
+        'Thành công',
+        `Bạn đã tham gia lớp ${foundClass.name}`,
+        [{ text: 'OK' }]
+      );
+
+      // Reset form và đóng modal
+      setFoundClass(null);
+      setClassIdToJoin('');
+      setIsJoinFormVisible(false);
+    } catch (error) {
+      console.error('Error joining class:', error);
+      Alert.alert(
+        'Lỗi',
+        'Đã xảy ra lỗi khi tham gia lớp học. Vui lòng thử lại.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  // Thêm hàm reset form tham gia
+  const resetJoinForm = () => {
+    setClassIdToJoin('');
+    setFoundClass(null);
+    setSearchError('');
+  };
+
+>>>>>>> Stashed changes
   useEffect(() => {
     const fetchTeams = async () => {
       try {
@@ -309,10 +429,24 @@ export default function TeamsScreen() {
       console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
     });
 
+<<<<<<< Updated upstream
     // api.post('/api/classes', {
     //   name: formData.className,
     //   numberOfWeeks: formData.weeks,
       
+=======
+    apiJson.post('/api/classes', {
+      name: formData.className,
+      numberOfWeeks: formData.weeks,
+      dateStudy: scheduleData.reduce((result, { day, startTime, endTime }) => {
+        result[day] = {
+          startTime: `${startTime}:00`,
+          endTime: `${endTime}:00`
+        };
+        return result;
+      }, {} as Record<string, { startTime: string; endTime: string }>)
+    });
+>>>>>>> Stashed changes
 
 
     // Show success message

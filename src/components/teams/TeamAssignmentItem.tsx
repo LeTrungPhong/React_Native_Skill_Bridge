@@ -9,18 +9,27 @@ interface TeamAssignmentItemProps {
 }
 
 function formatShortTime(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
+  const fixedDateString = dateString.replace(' ', 'T').replace(/\.\d+$/, '');
+
+  const date = new Date(fixedDateString);
+
+  if (isNaN(date.getTime())) {
+    throw new Error("Invalid date format");
+  }
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); 
+  const year = date.getFullYear().toString().slice(-2);
   const hour = date.getHours().toString().padStart(2, '0');
   const minute = date.getMinutes().toString().padStart(2, '0');
 
-  return `${hour}:${minute}, ${day} Th${month}`;
+  return `${hour}:${minute}, ${day}/${month}/${year}`;
 }
 
 const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) => {
-  const timestamp = assignment.timestamp && formatShortTime(assignment.timestamp);
-  const displayDeadline = formatShortTime(assignment.deadline);
+  // const timestamp = assignment.timestamp && formatShortTime(assignment.timestamp);
+  // console.log(assignment.deadLine)
+  const displayDeadline = `Due at ${formatShortTime(assignment.deadLine)}`;
   
   return (
     <View style={styles.assignmentItem}>
@@ -30,7 +39,7 @@ const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) =>
             <MaterialIcons name='assignment' size={28} color='#5E5CFF' />
             <View style={styles.info_text}>
               <Text style={styles.asg}>Assignments</Text>
-              <Text style={styles.timestamp}>{timestamp}</Text>
+              {/* <Text style={styles.timestamp}>{timestamp}</Text> */}
             </View>
           </View>
           <TouchableOpacity style={styles.menuButton}>
