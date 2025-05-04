@@ -3,8 +3,7 @@ import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 
 export interface Chat {
-    id: string;
-    name: string;
+    username: string;
     avatar?: string;
     lastMessage: string;
     initials: string; // Ký tự đầu tiên của tên
@@ -65,7 +64,7 @@ export default function CardChat({ chat, onPress }: CardChatProps) {
 
             <View style={styles.contentContainer}>
                 <View style={styles.headerRow}>
-                    <Text style={styles.name} numberOfLines={1}>{chat.name}</Text>
+                    <Text style={styles.name} numberOfLines={1}>{chat.username}</Text>
                 </View>
 
                 <View style={styles.messageRow}>
