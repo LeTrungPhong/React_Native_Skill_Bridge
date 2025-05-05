@@ -1,11 +1,9 @@
-import { RootStackParamList } from '@/src/types';
+import { AuthContext } from '@/src/context/authContext';
+import { IUser, IUserAsyncStorage, RootStackParamList } from '@/src/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
-<<<<<<< Updated upstream
-import React, { useMemo } from 'react';
-=======
 import { useFocusEffect } from '@react-navigation/native'; // Sửa import từ đây
 import React, { useCallback, useContext, useEffect, useState } from 'react';
->>>>>>> Stashed changes
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
 type StartScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Start'>;
@@ -14,26 +12,11 @@ interface StartScreenProps {
   navigation: StartScreenNavigationProp;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ navigation }) => {
-  const COLORS = [
-    '#5DADE2', 
-    '#F5B041',
-    '#58D68D',
-    '#BB8FCE',
-    '#EC7063',
-    '#45B39D',
-    '#AF7AC5',
-    '#5499C7',
-    '#52BE80',
-    '#F4D03F',
-  ];
+const getRecentLogins = async () => {
+  try {
+    const existingLoginsJson = await AsyncStorage.getItem('recentLogins');
+    let recentLogins: IUserAsyncStorage[] = existingLoginsJson ? JSON.parse(existingLoginsJson) : [];
 
-<<<<<<< Updated upstream
-  // Get random color
-  const getRandomColor = (): string => {
-    const randomIndex = Math.floor(Math.random() * COLORS.length);
-    return COLORS[randomIndex];
-=======
     const validLogins = recentLogins.filter((login: any) => {
       const expiresTime = new Date(login.expiresAt);
       const currentTime = new Date();
@@ -116,23 +99,7 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
     } catch (error) {
       console.error('Error saving auth:', error);
     }
->>>>>>> Stashed changes
   };
-
-  // Mock data for users
-  const users = [
-    { id: 1, name: 'Vo Thanh Tu', email: 'thanhtu@gmail.com', password: '12345' },
-    { id: 2, name: 'Duong Quang Minh Hoang', email: 'hoangduong@gmail.com', password: '12345' },
-    { id: 3, name: 'Nguyen Thanh Trung', email: 'trung@gmail.com', password: '12345' },
-    { id: 4, name: 'Le Trung Phong', email: 'phong@gmail.com', password: '12345' },
-  ];
-
-  const usersWithColors = useMemo(() => {
-    return users.map(user => ({
-      ...user,
-      color: getRandomColor()
-    }));
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -150,23 +117,6 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
           />
         </View>
   
-<<<<<<< Updated upstream
-        {usersWithColors.map((user) => (
-          <TouchableOpacity 
-            key={user.id} style={styles.userItem}
-            onPress={() => navigation.navigate('Home')}
-          >
-            <View style={[styles.avatar, { backgroundColor: user.color }]}>
-              <Text style={styles.avatarText}>{user.name.charAt(0)}</Text>
-            </View>
-            <View style={styles.userInfo}>
-              <Text style={styles.email}>{user.name}</Text>
-              <Text style={styles.userEmail}>{user.email}</Text>
-            </View>
-          </TouchableOpacity>
-          
-        ))}
-=======
         {users && users.length > 0 ? (
           users.map((user: any, index) => (
             <TouchableOpacity 
@@ -188,7 +138,6 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
         ) : (
           <Text style={styles.noRecentLogins}>No recent logins</Text>
         )}
->>>>>>> Stashed changes
       </ScrollView>
       
       <View style={styles.footer}>
@@ -261,11 +210,11 @@ const styles = StyleSheet.create({
   userInfo: {
     marginLeft: 15,
   },
-  email: {
+  name: {
     fontSize: 16,
     fontWeight: '500',
   },
-  userEmail: {
+  username: {
     fontSize: 14,
     color: '#666',
   },
@@ -292,6 +241,12 @@ const styles = StyleSheet.create({
   signUpButtonText: {
     fontSize: 16,
     color: '#fff',
+  },
+  noRecentLogins: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
+    fontSize: 16,
   },
 });
 

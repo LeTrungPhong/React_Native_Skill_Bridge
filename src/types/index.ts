@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 
 export interface IUser {
   token: string;
@@ -54,20 +52,12 @@ export interface IFileUpload {
 
 
 ////////////////
->>>>>>> Stashed changes
 export type RootStackParamList = {
   Start: undefined;
   SignIn: undefined;
   SignUp: undefined;
   Home: undefined;
 };
-
-export interface IUser {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-}
 
 export interface IActivity {
   id: string;

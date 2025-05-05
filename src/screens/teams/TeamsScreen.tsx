@@ -11,36 +11,9 @@ import { TeamsStackParamList } from '@/src/navigation/type';
 import { AuthContext } from '@/src/context/authContext';
 import { apiJson } from '@/src/api/axios'; // Import your API utility
 
-// const TEAMS: Team[] = [
-//   {
-//     id: '1',
-//     name: 'GVCN',
-//     initials: 'G',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '2',
-//     name: 'KHDL',
-//     initials: 'K',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '3',
-//     name: 'AI',
-//     initials: 'AI',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-//   {
-//     id: '4',
-//     name: 'Mobile',
-//     initials: 'EP',
-//     description: 'Nguyen Van A - CNTT',
-//   },
-// ];
-
 type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
 
-type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday';
+type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 type TimeField = 'startHour' | 'startMinute' | 'endHour' | 'endMinute';
 
 interface DaySchedule {
@@ -91,28 +64,31 @@ export default function TeamsScreen() {
     weeks: '',
     roomName: '',
     days: {
-      monday: false,
-      tuesday: false,
-      wednesday: false,
-      thursday: false,
-      friday: false,
-      saturday: false,
+      Monday: false,
+      Tuesday: false,
+      Wednesday: false,
+      Thursday: false,
+      Friday: false,
+      Saturday: false,
     },
     times: {
-      monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-      saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+      Saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
     }
   });
+
+  const [isJoinFormVisible, setIsJoinFormVisible] = useState(false);
+  const [classIdToJoin, setClassIdToJoin] = useState('');
+  const [foundClass, setFoundClass] = useState<Team | null>(null);
+  const [searchError, setSearchError] = useState('');
 
   const [state] = useContext(AuthContext);
   console.log('AuthContext state:', state);
 
-<<<<<<< Updated upstream
-=======
   const fetchTeams = async () => {
     try {
       // Simulate fetching data from an API or local storage
@@ -230,35 +206,10 @@ export default function TeamsScreen() {
     setSearchError('');
   };
 
->>>>>>> Stashed changes
   useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        // Simulate fetching data from an API or local storage
-        const data = await api.get('/api/classes') // Replace with your API endpoint
-        // const data = await response.json();
-        // console.log('Fetched teams:', data);
-        if (data && data.data) {
-          // Transform the API response to match the Team interface
-          const transformedData: Team[] = data.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
-            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
-          }));
-          
-          console.log('Transformed teams data:', transformedData);
-          setTeams(transformedData);
-        }
-        // setTeams(data);
-      } catch (error) {
-        console.error('Error fetching teams:', error);
-      }
-    };
     // Fetch teams from the server or local storage
     fetchTeams();
   }, []);
-
 
   const resetForm = () => {
     setFormData({
@@ -266,20 +217,20 @@ export default function TeamsScreen() {
       weeks: '',
       roomName: '',
       days: {
-        monday: false,
-        tuesday: false,
-        wednesday: false,
-        thursday: false,
-        friday: false,
-        saturday: false,
+        Monday: false,
+        Tuesday: false,
+        Wednesday: false,
+        Thursday: false,
+        Friday: false,
+        Saturday: false,
       },
       times: {
-        monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
-        saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Monday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Tuesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Wednesday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Thursday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Friday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
+        Saturday: { startHour: '', startMinute: '', endHour: '', endMinute: '' },
       }
     });
     setFormErrors({
@@ -298,7 +249,7 @@ export default function TeamsScreen() {
         [day]: !formData.days[day]
       }
     });
-    
+
     // Clear any schedule error when a day is selected
     if (formErrors.schedule && !formData.days[day]) {
       setFormErrors({
@@ -313,7 +264,7 @@ export default function TeamsScreen() {
     if (value && !/^\d+$/.test(value)) {
       return;
     }
-    
+
     setFormData({
       ...formData,
       times: {
@@ -364,7 +315,7 @@ export default function TeamsScreen() {
     } else {
       // Validate time fields for selected days
       const daysWithMissingTimes: DayOfWeek[] = [];
-      
+
       (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
         if (formData.days[day]) {
           const times = formData.times[day];
@@ -374,7 +325,7 @@ export default function TeamsScreen() {
           }
         }
       });
-      
+
       if (daysWithMissingTimes.length > 0) {
         newErrors.schedule = `Please complete time fields for: ${daysWithMissingTimes.join(', ')}`;
       }
@@ -384,15 +335,15 @@ export default function TeamsScreen() {
     return isValid;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert('Validation Error', 'Please check the form for errors');
       return;
     }
-    
+
     // Convert form data to the desired format
     const scheduleData: ScheduleItem[] = [];
-    
+
     (Object.keys(formData.days) as DayOfWeek[]).forEach(day => {
       if (formData.days[day]) {
         const times = formData.times[day];
@@ -403,7 +354,7 @@ export default function TeamsScreen() {
         });
       }
     });
-    
+
     // // Create a new team object
     // const newTeam: Team = {
     //   id: (teams.length + 1).toString(),
@@ -413,10 +364,10 @@ export default function TeamsScreen() {
     //   // Add additional fields if needed in your Team interface
     //   // schedule: scheduleData
     // };
-    
+
     // // Add the new team to the list
     // setTeams([...teams, newTeam]);
-    
+
     // Log the full data for debugging
     console.log('Form submitted successfully:', {
       className: formData.className,
@@ -429,12 +380,6 @@ export default function TeamsScreen() {
       console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
     });
 
-<<<<<<< Updated upstream
-    // api.post('/api/classes', {
-    //   name: formData.className,
-    //   numberOfWeeks: formData.weeks,
-      
-=======
     apiJson.post('/api/classes', {
       name: formData.className,
       numberOfWeeks: formData.weeks,
@@ -446,12 +391,20 @@ export default function TeamsScreen() {
         return result;
       }, {} as Record<string, { startTime: string; endTime: string }>)
     });
->>>>>>> Stashed changes
 
+    // const res = await api.get('/api/classes/teacher');
+    // setTeams(res.data.result.map((item: any) => ({
+    //     id: item.id,
+    //     name: item.name,
+    //     initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
+    //     description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+    //   })));
+
+    fetchTeams();
 
     // Show success message
     Alert.alert('Success', 'New class has been created successfully');
-    
+
     // Reset form and close modal
     resetForm();
     setIsFormVisible(false);
@@ -471,7 +424,7 @@ export default function TeamsScreen() {
 
   const renderTimeInputs = (day: DayOfWeek) => {
     if (!formData.days[day]) return null;
-    
+
     return (
       <View style={styles.timeInputContainer}>
         <View style={styles.timeField}>
@@ -496,7 +449,7 @@ export default function TeamsScreen() {
             />
           </View>
         </View>
-        
+
         <View style={styles.timeField}>
           <Text style={styles.timeLabel}>End:</Text>
           <View style={styles.timeInputWrapper}>
@@ -555,13 +508,22 @@ export default function TeamsScreen() {
         style={styles.list}
       />
       {
-        state.roll === 'TEACHER' && (
+        state.info.role === 'TEACHER' ? (
           <View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.button_add}
               onPress={() => setIsFormVisible(true)}
             >
               <Ionicons name="add" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View>
+            <TouchableOpacity
+              style={styles.button_join}
+              onPress={() => setIsJoinFormVisible(true)}
+            >
+              <Ionicons name="enter-outline" size={24} color="white" />
             </TouchableOpacity>
           </View>
         )}
@@ -579,7 +541,7 @@ export default function TeamsScreen() {
               <Ionicons name="close" size={24} />
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView>
             <View style={styles.formField}>
               <Text style={styles.inputLabel}>Class Name</Text>
@@ -588,9 +550,9 @@ export default function TeamsScreen() {
                 placeholder="Enter class name"
                 value={formData.className}
                 onChangeText={(text) => {
-                  setFormData({...formData, className: text});
+                  setFormData({ ...formData, className: text });
                   if (formErrors.className) {
-                    setFormErrors({...formErrors, className: ''});
+                    setFormErrors({ ...formErrors, className: '' });
                   }
                 }}
               />
@@ -605,9 +567,9 @@ export default function TeamsScreen() {
                 keyboardType="number-pad"
                 value={formData.weeks}
                 onChangeText={(text) => {
-                  setFormData({...formData, weeks: text});
+                  setFormData({ ...formData, weeks: text });
                   if (formErrors.weeks) {
-                    setFormErrors({...formErrors, weeks: ''});
+                    setFormErrors({ ...formErrors, weeks: '' });
                   }
                 }}
               />
@@ -621,87 +583,156 @@ export default function TeamsScreen() {
                 placeholder="Enter room name"
                 value={formData.roomName}
                 onChangeText={(text) => {
-                  setFormData({...formData, roomName: text});
+                  setFormData({ ...formData, roomName: text });
                   if (formErrors.roomName) {
-                    setFormErrors({...formErrors, roomName: ''});
+                    setFormErrors({ ...formErrors, roomName: '' });
                   }
                 }}
               />
               {formErrors.roomName ? <Text style={styles.errorText}>{formErrors.roomName}</Text> : null}
             </View>
 
-            <Text style={[styles.inputLabel, {marginTop: 20}]}>Class Schedule</Text>
+            <Text style={[styles.inputLabel, { marginTop: 20 }]}>Class Schedule</Text>
             {formErrors.schedule ? <Text style={styles.errorText}>{formErrors.schedule}</Text> : null}
-            
+
             {/* Days of week */}
             <View style={styles.daysContainer}>
               {/* Monday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Monday</Text>
                 <Switch
-                  value={formData.days.monday}
-                  onValueChange={() => toggleDay('monday')}
+                  value={formData.days.Monday}
+                  onValueChange={() => toggleDay('Monday')}
                 />
               </View>
-              {renderTimeInputs('monday')}
-              
+              {renderTimeInputs('Monday')}
+
               {/* Tuesday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Tuesday</Text>
                 <Switch
-                  value={formData.days.tuesday}
-                  onValueChange={() => toggleDay('tuesday')}
+                  value={formData.days.Tuesday}
+                  onValueChange={() => toggleDay('Tuesday')}
                 />
               </View>
-              {renderTimeInputs('tuesday')}
-              
+              {renderTimeInputs('Tuesday')}
+
               {/* Wednesday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Wednesday</Text>
                 <Switch
-                  value={formData.days.wednesday}
-                  onValueChange={() => toggleDay('wednesday')}
+                  value={formData.days.Wednesday}
+                  onValueChange={() => toggleDay('Wednesday')}
                 />
               </View>
-              {renderTimeInputs('wednesday')}
-              
+              {renderTimeInputs('Wednesday')}
+
               {/* Thursday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Thursday</Text>
                 <Switch
-                  value={formData.days.thursday}
-                  onValueChange={() => toggleDay('thursday')}
+                  value={formData.days.Thursday}
+                  onValueChange={() => toggleDay('Thursday')}
                 />
               </View>
-              {renderTimeInputs('thursday')}
-              
+              {renderTimeInputs('Thursday')}
+
               {/* Friday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Friday</Text>
                 <Switch
-                  value={formData.days.friday}
-                  onValueChange={() => toggleDay('friday')}
+                  value={formData.days.Friday}
+                  onValueChange={() => toggleDay('Friday')}
                 />
               </View>
-              {renderTimeInputs('friday')}
-              
+              {renderTimeInputs('Friday')}
+
               {/* Saturday */}
               <View style={styles.dayRow}>
                 <Text style={styles.dayText}>Saturday</Text>
                 <Switch
-                  value={formData.days.saturday}
-                  onValueChange={() => toggleDay('saturday')}
+                  value={formData.days.Saturday}
+                  onValueChange={() => toggleDay('Saturday')}
                 />
               </View>
-              {renderTimeInputs('saturday')}
+              {renderTimeInputs('Saturday')}
             </View>
 
             <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
               <Text style={styles.submitButtonText}>Create Class</Text>
             </TouchableOpacity>
-            
-            <View style={{height: 50}} />
+
+            <View style={{ height: 50 }} />
           </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Join Class Form Modal */}
+      <Modal
+        animationType="slide"
+        visible={isJoinFormVisible}
+        onRequestClose={() => {
+          resetJoinForm();
+          setIsJoinFormVisible(false);
+        }}
+      >
+        <SafeAreaView style={styles.modalWrapper}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Tham gia lớp học</Text>
+            <TouchableOpacity onPress={() => {
+              resetJoinForm();
+              setIsJoinFormVisible(false);
+            }}>
+              <Ionicons name="close" size={24} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.formField}>
+            <Text style={styles.inputLabel}>Mã lớp học</Text>
+            <View style={styles.searchClassContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  styles.searchClassInput,
+                  searchError ? styles.inputError : null
+                ]}
+                placeholder="Nhập mã lớp học"
+                value={classIdToJoin}
+                onChangeText={(text) => {
+                  setClassIdToJoin(text);
+                  if (searchError) setSearchError('');
+                }}
+              />
+              <TouchableOpacity
+                style={styles.searchClassButton}
+                onPress={searchClassById}
+              >
+                <Ionicons name="search" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+            {searchError ? <Text style={styles.errorText}>{searchError}</Text> : null}
+          </View>
+
+          {/* Hiển thị thông tin lớp học tìm thấy */}
+          {foundClass && (
+            <View style={styles.foundClassCard}>
+              <View style={styles.foundClassHeader}>
+                <View style={styles.classInitials}>
+                  <Text style={styles.classInitialsText}>{foundClass.initials}</Text>
+                </View>
+                <View style={styles.classInfo}>
+                  <Text style={styles.className}>{foundClass.name}</Text>
+                  <Text style={styles.classDescription}>{foundClass.description}</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={handleJoinClass}
+              >
+                <Text style={styles.joinButtonText}>Tham gia</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </SafeAreaView>
       </Modal>
     </View>
@@ -864,10 +895,98 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 5,
   },
+  button_join: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#34A853', // Màu xanh lá cây
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  searchClassContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  searchClassInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  searchClassButton: {
+    backgroundColor: '#4285F4',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  foundClassCard: {
+    marginTop: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  foundClassHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  classInitials: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  classInitialsText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  classInfo: {
+    flex: 1,
+  },
+  className: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212121',
+    marginBottom: 4,
+  },
+  classDescription: {
+    fontSize: 14,
+    color: '#757575',
+  },
+  joinButton: {
+    backgroundColor: '#34A853',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  joinButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 function removeVietnameseTones(str: any) {
   return str.normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/đ/g, "d").replace(/Đ/g, "D");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d").replace(/Đ/g, "D");
 }

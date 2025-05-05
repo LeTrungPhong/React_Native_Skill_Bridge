@@ -10,6 +10,7 @@ import PostScreen from './PostScreen';
 import TeamAssignmentScreen from './TeamAssignmentScreen';
 import AttendanceScreen from './AttendanceScreen';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import LessonDetailScreen from './LessonDetailScreen';
 import AssignmentDetailScreen from '../assignments/AssignmentDetailScreen';
 
 // Định nghĩa kiểu cho params
@@ -42,11 +43,6 @@ const GeneralTabs = ({ route }: any) => {
                         fontWeight: 'bold',
                     }, 
                 }}>
-<<<<<<< Updated upstream
-                <TobTab.Screen name="PostScreen" component={PostScreen} options={{ title: 'Post' }} />
-                <TobTab.Screen name="TeamAssignmentScreen" component={TeamAssignmentScreen} options={{ title: 'Assignment' }} />
-                <TobTab.Screen name="AttendanceScreen" component={AttendanceScreen} options={{ title: 'Attendance' }} />
-=======
                 <TobTab.Screen 
                     name="PostScreen" 
                     component={PostScreen} 
@@ -65,7 +61,6 @@ const GeneralTabs = ({ route }: any) => {
                     options={{ title: 'Attendance' }} 
                     initialParams={{ team }} 
                 />
->>>>>>> Stashed changes
             </TobTab.Navigator>
         </View>
     );

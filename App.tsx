@@ -1,7 +1,6 @@
 import React from 'react';
 import { registerRootComponent } from 'expo';
 import AppNavigator from './src/AppNavigator';
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import StartScreen from './src/screens/auth/StartScreen';
@@ -12,8 +11,7 @@ import { AuthProvider } from './src/context/authContext';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-function App() {
-  // return <AppNavigator />;
+function App() {  
   return (
     <AuthProvider>
       <NavigationContainer>
