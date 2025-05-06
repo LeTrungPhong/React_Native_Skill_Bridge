@@ -161,7 +161,16 @@ export default function LessonDetailScreen() {
                             <View style={styles.studentInfo}>
                                 <Text style={styles.studentName}>{item.studentName}</Text>
                                 <Text style={styles.checkinTime}>
-                                    Check In: {item.checkinDate == null ? 'Not checked in' : item.checkinDate}
+                                    Check In: {item.checkinDate == null 
+                                        ? 'Not checked in' 
+                                        : new Date(item.checkinDate).toLocaleString('en-US', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit'
+                                        })}
                                 </Text>
                             </View>
                             

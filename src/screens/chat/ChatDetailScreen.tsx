@@ -105,7 +105,7 @@ export default function ChatDetailScreen() {
                             // Chuyển đổi message từ server thành định dạng phù hợp
                             const newMsg: Message = {
                                 id: receivedData.id || Date.now().toString(),
-                                text: receivedData.content,
+                                text: receivedData.message,
                                 senderId: receivedData.sender,
                                 receiverId: receivedData.receiver,
                                 timestamp: new Date(receivedData.timestamp || Date.now()).toLocaleTimeString([], { 
