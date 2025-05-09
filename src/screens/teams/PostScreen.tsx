@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "@/src/components/teams/Card";
 import { 
     ScrollView, 
@@ -14,10 +14,20 @@ import {
     Keyboard
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import api from "@/src/api/axios";
 
 export default function PostScreen() {
     const [showPostForm, setShowPostForm] = useState(false);
     const [postContent, setPostContent] = useState("");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await api.get("/api/posts/class/1");
+            console.log("Post class data:", response.data);
+        };
+
+        fetchData();
+    });
 
     // Xử lý đăng bài viết
     const handlePostSubmit = () => {
@@ -36,17 +46,52 @@ export default function PostScreen() {
         Keyboard.dismiss();
     };
 
+    // Mock data for posts
+    const [posts] = useState([
+        {
+            id: "1",
+            author: "Nguyen Van A",
+            content: "Hôm nay là một ngày tuyệt vời để học React Native!",
+            time: "2 giờ trước",
+        },
+        {
+            id: "2",
+            author: "Tran Thi B",
+            content: "Đã ai hoàn thành bài tập tuần này chưa? Tôi đang gặp một số khó khăn với phần animation.",
+            time: "3 giờ trước",
+        },
+        {
+            id: "3",
+            author: "Le Van C",
+            content: "Chia sẻ một số tài liệu học tập về React Native mà tôi thấy hữu ích. Link: reactnative.dev",
+            time: "5 giờ trước",
+        },
+        {
+            id: "4",
+            author: "Pham Thi D",
+            content: "Vừa hoàn thành dự án đầu tiên với React Native. Cảm giác thật tuyệt vời!",
+            time: "1 ngày trước",
+        },
+        {
+            id: "5",
+            author: "Hoang Van E",
+            content: "Ai có kinh nghiệm làm việc với Firebase trong React Native không? Tôi cần một số lời khuyên.",
+            time: "2 ngày trước",
+        },
+    ]);
+
     return (
         <View style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={styles.container}>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
-                <Card></Card>
+                {posts.map((post) => (
+                    <Card
+                        key={post.id} 
+                        id={post.id}
+                        author={post.author} 
+                        content={post.content} 
+                        time={post.time} 
+                    />
+                ))}
             </ScrollView>
 
             {/* Floating button để đăng bài */}

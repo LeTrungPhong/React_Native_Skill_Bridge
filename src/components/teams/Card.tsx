@@ -10,7 +10,14 @@ type Comment = {
     time: string;
 };
 
-export default function Card() {
+interface CardProps {
+    id: string;
+    author: string;
+    content: string;
+    time: string;
+}
+
+export default function Card(data: CardProps) {
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [comments, setComments] = useState<Comment[]>([
@@ -59,8 +66,8 @@ export default function Card() {
                 <View style={styles.infor}>
                     <FontAwesome5 name="user-circle" size={40} color="#4285F4" />
                     <View style={styles.infor_text}>
-                        <Text style={styles.authorName}>Lê Trung Phong</Text>
-                        <Text style={styles.timestamp}>9:10 15 thg 4</Text>
+                        <Text style={styles.authorName}>{data.author}</Text>
+                        <Text style={styles.timestamp}>{data.time}</Text>
                     </View>
                 </View>
                 <TouchableOpacity style={styles.menuButton}>
@@ -69,7 +76,7 @@ export default function Card() {
             </View>
             
             <Text style={styles.postContent}>
-                Ai không biết sử dụng AI để code thì tôi cho học lại hết, tương lai AI nó làm hết, AI là nhất
+                {data.content}
             </Text>
             
             <View style={styles.interactionBar}>
