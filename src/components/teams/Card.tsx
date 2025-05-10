@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Image, Modal, Alert } from "react-native";
 import { FontAwesome5, Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
 import api from "@/src/api/axios";
+import { AuthContext } from "@/src/context/authContext";
 
 // Định nghĩa kiểu dữ liệu cho comments
 type Comment = {
@@ -9,6 +10,7 @@ type Comment = {
     author: string;
     content: string;
     time: string;
+    username?: string;
 };
 
 export interface CardProps {
@@ -17,45 +19,84 @@ export interface CardProps {
     title: string;
     content: string;
     time: string;
-    onDelete?: (id: string) => void; // Thêm callback onDelete
-    currentUser?: string; // Thêm để kiểm tra nếu người dùng hiện tại là tác giả
+    onDelete?: (id: string) => void;
+    currentUser?: string;
 }
 
 export default function Card(data: CardProps) {
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [showMenu, setShowMenu] = useState(false);
-    const [comments, setComments] = useState<Comment[]>([
-        // {
-        //     id: '1',
-        //     author: 'Nguyễn Văn A',
-        //     content: 'Đúng vậy, AI đang thay đổi tương lai của lập trình rất nhiều.',
-        //     time: '9:30 15 thg 4',
-        // },
-        // {
-        //     id: '2',
-        //     author: 'Trần Thị B',
-        //     content: 'Tôi vẫn thích code thủ công hơn, giúp hiểu sâu vấn đề.',
-        //     time: '10:15 15 thg 4',
-        // },
-    ]);
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [state] = useContext(AuthContext);
+    const currentUserId = state.info.username;
+    
+    // State để theo dõi comment nào đang hiển thị menu
+    const [activeCommentMenu, setActiveCommentMenu] = useState<string | null>(null);
 
-    console.log(data.author + " " + data.currentUser);
+    useEffect(() => {
+        fetchComments();
+    }, []);
+
+    // Hàm lấy comments
+    const fetchComments = async () => {
+        try {
+            const response = await api.get(`/api/comments/post/${data.id}`);
+            const commentsData = response.data.map((comment: any) => ({
+                id: comment.id,
+                author: comment.userFullName,
+                content: comment.content,
+                username: comment.username,
+                time: new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' + new Date(comment.createdAt).toLocaleDateString('vi-VN', {day: '2-digit', month: 'numeric'}),
+            }));
+            setComments(commentsData);
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+        }
+    };
     
     // Hàm xử lý khi gửi bình luận
-    const handleSendComment = () => {
+    const handleSendComment = async () => {
         if (replyText.trim()) {
-            const newComment: Comment = {
-                id: Date.now().toString(),
-                author: 'Bạn',
-                content: replyText,
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' + new Date().toLocaleDateString('vi-VN', {day: '2-digit', month: 'numeric'}),
-            };
-            
-            setComments([...comments, newComment]);
-            setReplyText('');
-            setShowReplyInput(false); // Đóng input sau khi gửi bình luận
+            try {
+                await api.post('/api/comments', {
+                    postId: data.id,
+                    content: replyText,
+                });
+
+                await fetchComments();
+                setReplyText('');
+                setShowReplyInput(false);
+            } catch (error) {
+                console.error("Error sending comment:", error);
+                Alert.alert("Lỗi", "Không thể gửi bình luận. Vui lòng thử lại sau.");
+            }
         }
+    };
+
+    // Hàm xóa bình luận
+    const handleDeleteComment = async (commentId: string) => {
+        Alert.alert(
+            "Xác nhận xóa",
+            "Bạn có chắc chắn muốn xóa bình luận này không?",
+            [
+                { text: "Hủy", style: "cancel" },
+                { 
+                    text: "Xóa", 
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            await api.delete(`/api/comments/${commentId}`);
+                            setComments(comments.filter(comment => comment.id !== commentId));
+                            setActiveCommentMenu(null); // Đóng menu sau khi xóa
+                        } catch (error) {
+                            console.error("Error deleting comment:", error);
+                            Alert.alert("Lỗi", "Không thể xóa bình luận. Vui lòng thử lại sau.");
+                        }
+                    } 
+                }
+            ]
+        );
     };
 
     // Hàm để hiển thị hoặc ẩn input trả lời
@@ -64,9 +105,24 @@ export default function Card(data: CardProps) {
         setReplyText('');
     };
     
-    // Hàm hiển thị menu
+    // Hàm hiển thị menu bài viết
     const toggleMenu = () => {
         setShowMenu(!showMenu);
+        // Đóng bất kỳ menu comment nào đang mở
+        setActiveCommentMenu(null);
+    };
+    
+    // Hàm hiển thị menu của comment
+    const toggleCommentMenu = (commentId: string) => {
+        // Nếu đang hiển thị menu của comment này thì ẩn đi
+        if (activeCommentMenu === commentId) {
+            setActiveCommentMenu(null);
+        } else {
+            // Ngược lại, hiển thị menu của comment này
+            setActiveCommentMenu(commentId);
+            // Đảm bảo đóng menu bài viết nếu đang mở
+            setShowMenu(false);
+        }
     };
     
     // Hàm xóa bài viết
@@ -80,13 +136,15 @@ export default function Card(data: CardProps) {
                     text: "Xóa", 
                     style: "destructive",
                     onPress: async () => {
-                        // Xử lý xóa bài viết ở đây
-
-                        await api.delete(`/api/posts/${data.id}`);
-
-                        setShowMenu(false);
-                        if (data.onDelete) {
-                            data.onDelete(data.id);
+                        try {
+                            await api.delete(`/api/posts/${data.id}`);
+                            setShowMenu(false);
+                            if (data.onDelete) {
+                                data.onDelete(data.id);
+                            }
+                        } catch (error) {
+                            console.error("Error deleting post:", error);
+                            Alert.alert("Lỗi", "Không thể xóa bài viết. Vui lòng thử lại sau.");
                         }
                     } 
                 }
@@ -94,7 +152,7 @@ export default function Card(data: CardProps) {
         );
     };
 
-    // Kiểm tra xem người dùng hiện tại có phải là tác giả không
+    // Kiểm tra xem người dùng hiện tại có phải là tác giả của bài viết không
     const isAuthor = data.currentUser === data.author;
 
     return (
@@ -124,28 +182,13 @@ export default function Card(data: CardProps) {
                                     <Text style={styles.deleteText}>Xóa bài viết</Text>
                                 </TouchableOpacity>
                             )}
-                            {/* <TouchableOpacity 
-                                style={styles.menuItem} 
-                                onPress={() => {
-                                    // Thêm chức năng báo cáo tại đây
-                                    Alert.alert("Báo cáo", "Chức năng đang được phát triển");
-                                    setShowMenu(false);
-                                }}
-                            >
-                                <Ionicons name="flag" size={16} color="#666" />
-                                <Text style={styles.menuItemText}>Báo cáo</Text>
-                            </TouchableOpacity> */}
                         </View>
                     )}
                 </View>
             </View>
             
-            {/* Hiển thị tiêu đề bài đăng */}
             <Text style={styles.postTitle}>{data.title}</Text>
-            
-            <Text style={styles.postContent}>
-                {data.content}
-            </Text>
+            <Text style={styles.postContent}>{data.content}</Text>
             
             <View style={styles.interactionBar}>
                 <TouchableOpacity 
@@ -174,16 +217,47 @@ export default function Card(data: CardProps) {
                 <View key={comment.id} style={styles.commentItem}>
                     <FontAwesome5 name="user-circle" size={28} color="#4285F4" />
                     <View style={styles.commentContent}>
-                        <View style={styles.commentBubble}>
-                            <Text style={styles.commentAuthor}>{comment.author}</Text>
-                            <Text>{comment.content}</Text>
-                        </View>
+                        <TouchableOpacity 
+                            activeOpacity={0.7}
+                            onLongPress={() => comment.username === currentUserId && toggleCommentMenu(comment.id)}
+                        >
+                            <View style={styles.commentBubble}>
+                                <View style={styles.commentHeader}>
+                                    <Text style={styles.commentAuthor}>{comment.author}</Text>
+                                    
+                                    {/* Hiển thị nút ba chấm cho comment của người dùng hiện tại */}
+                                    {comment.username === currentUserId && (
+                                        <TouchableOpacity 
+                                            style={styles.commentMenuButton}
+                                            onPress={() => toggleCommentMenu(comment.id)}
+                                        >
+                                            <Ionicons name="ellipsis-horizontal" size={14} color="#666" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                                <Text>{comment.content}</Text>
+                            </View>
+                        </TouchableOpacity>
+                        
+                        {/* Menu xóa comment */}
+                        {activeCommentMenu === comment.id && comment.username === currentUserId && (
+                            <View style={styles.commentDropdownMenu}>
+                                <TouchableOpacity 
+                                    style={styles.commentMenuItem} 
+                                    onPress={() => handleDeleteComment(comment.id)}
+                                >
+                                    <AntDesign name="delete" size={14} color="#FF3B30" />
+                                    <Text style={styles.commentDeleteText}>Xóa bình luận</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                        
                         <Text style={styles.commentTime}>{comment.time}</Text>
                     </View>
                 </View>
             ))}
             
-            {/* Input bình luận chính cho post */}
+            {/* Input bình luận */}
             {showReplyInput && (
                 <View style={styles.replyContainer}>
                     <FontAwesome5 name="user-circle" size={28} color="#4285F4" />
@@ -334,6 +408,7 @@ const styles = StyleSheet.create({
     },
     commentContent: {
         flex: 1,
+        position: 'relative',
     },
     commentBubble: {
         backgroundColor: '#F5F7FA',
@@ -341,10 +416,45 @@ const styles = StyleSheet.create({
         padding: 10,
         paddingVertical: 8
     },
+    commentHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 2
+    },
     commentAuthor: {
         fontWeight: '600',
         fontSize: 13,
-        marginBottom: 2
+    },
+    // Nút ba chấm cho comment
+    commentMenuButton: {
+        padding: 2,
+        marginLeft: 5,
+    },
+    // Menu xóa comment
+    commentDropdownMenu: {
+        position: 'absolute',
+        top: 30,
+        right: 5,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3.84,
+        elevation: 5,
+        width: 140,
+        zIndex: 999,
+    },
+    commentMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+    },
+    commentDeleteText: {
+        marginLeft: 8,
+        fontSize: 13,
+        color: '#FF3B30',
     },
     commentTime: {
         fontSize: 11,
@@ -379,23 +489,5 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.5
-    },
-    commentActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4,
-    },
-    replyButton: {
-        marginLeft: 12,
-    },
-    replyButtonText: {
-        fontSize: 12,
-        color: '#4285F4',
-    },
-    replyIndicator: {
-        width: 2,
-        height: '100%',
-        backgroundColor: '#4285F4',
-        marginRight: 8,
     },
 });
