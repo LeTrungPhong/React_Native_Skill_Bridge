@@ -90,8 +90,16 @@ export default function PostScreen() {
             setRefreshing(true);
             await api.delete(`/api/posts/${postId}`);
             
-            // Cập nhật state để xóa bài viết khỏi UI
-            setPosts(posts.filter(post => post.id !== postId));
+            const response = await api.get(`/api/posts/class/${team.id}`);
+            console.log("Post class data:", response.data);
+
+            setPosts(response.data.map((post: any) => ({
+                id: post.id,
+                content: post.content,
+                title: post.title,
+                time: new Date(post.createdAt).toLocaleString(),
+                author: post.teacherName,
+            })));
             Alert.alert("Thành công", "Đã xóa bài viết");
         } catch (error) {
             console.error("Error deleting post:", error);

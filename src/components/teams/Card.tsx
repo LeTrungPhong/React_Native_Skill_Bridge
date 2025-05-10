@@ -87,7 +87,19 @@ export default function Card(data: CardProps) {
                     onPress: async () => {
                         try {
                             await api.delete(`/api/comments/${commentId}`);
-                            setComments(comments.filter(comment => comment.id !== commentId));
+                            // setComments(comments.filter(comment => comment.id !== commentId));
+
+                            const response = await api.get(`/api/comments/post/${data.id}`);
+                            const commentsData = response.data.map((comment: any) => ({
+                                id: comment.id,
+                                author: comment.userFullName,
+                                content: comment.content,
+                                username: comment.username,
+                                time: new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' ' + new Date(comment.createdAt).toLocaleDateString('vi-VN', {day: '2-digit', month: 'numeric'}),
+                            })); 
+
+                            setComments(commentsData);
+
                             setActiveCommentMenu(null); // Đóng menu sau khi xóa
                         } catch (error) {
                             console.error("Error deleting comment:", error);
@@ -137,11 +149,10 @@ export default function Card(data: CardProps) {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await api.delete(`/api/posts/${data.id}`);
-                            setShowMenu(false);
                             if (data.onDelete) {
                                 data.onDelete(data.id);
                             }
+                            setShowMenu(false);
                         } catch (error) {
                             console.error("Error deleting post:", error);
                             Alert.alert("Lỗi", "Không thể xóa bài viết. Vui lòng thử lại sau.");
