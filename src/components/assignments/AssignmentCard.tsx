@@ -1,33 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { IDemooAssignment } from '@/src/types';
+import React, { useContext, useEffect, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { IAssignment, IStudentSubmission } from '@/src/types';
+import { AuthContext } from '@/src/context/authContext';
+import { apiJson } from '@/src/api/axios';
+import { Ionicons } from '@expo/vector-icons';
+import { formatShortTime } from '@/src/services';
 
 interface AssignmentCardProps {
-  assignment: IDemooAssignment;
+  assignment: IAssignment;
   onSubmit?: (id: string) => void;
 }
 
-function formatShortTime(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
-
-  return `${hour}:${minute}, ${day} Th${month}`;
-}
-
 const AssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
+  const [state] = useContext(AuthContext);
+  const [submission, setSubmission] = useState<IStudentSubmission | null>(null);
+
   const [overdue, setOverdue] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitNoti, setSubmitNoti] = useState('');
   const [submitBtnText, setSubmitBtnText] = useState('');
   const [score, setScore] = useState('No score yet');
-  const [attachment, setAttachment] = useState('');
   
-  const displayDeadline = `Due at ${formatShortTime(assignment.deadline)}`;
+  const [addAttachment, setAttachment] = useState(false);
+
+  const displayDeadline = `Due at ${formatShortTime(assignment.deadLine)}`;
+
+  const fetchSubmission = async () => {
+    try {
+      const res = await apiJson.get(`/api/assignment/${assignment.classId}/${assignment.id}`);
+      
+      if(res && res.data && res.data.result.submission){
+        const submissionData = res.data.result.submission;
+        setSubmission({
+          id: submissionData.id,
+          submissionTime: submissionData.submissionTime,
+          filesName: submissionData.filesNames,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching submission:', error);
+    }
+  }
+
   useEffect(() => {
-    const submittedAt = assignment.submittedAt;    
+    fetchSubmission();
+  }, []);
+
+  useEffect(() => {
+    console.log('assignment', assignment);
+    console.log('submission', submission);
+
+    const submittedAt = submission?.submissionTime;
     if(submittedAt){
       setSubmitNoti(`Submitted at ${formatShortTime(submittedAt)}`);
       setIsSubmitted(true);
@@ -35,15 +58,15 @@ const AssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
       setSubmitBtnText('Undo turn in');
 
       setScore(
-        assignment.score !== undefined && assignment.score !== null
-          ? String(assignment.score)
-          : '100 points possible'
+        submission.score !== undefined && submission.score !== null
+          ? String(submission.score)
+          : '10 points possible'
       );
       
       return;
     }
 
-    const isOverdue = new Date(assignment.deadline) < new Date();
+    const isOverdue = new Date(assignment.deadLine) < new Date();
     if(isOverdue){
       setSubmitNoti('Not submitted yet');
       setOverdue(true);
@@ -52,7 +75,7 @@ const AssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
       setOverdue(false);
       setSubmitBtnText('Turn in');
     }
-  }, [assignment]);  
+  }, [submission]);  
 
   // Handle submission
   function handleSubmit() {
@@ -63,9 +86,18 @@ const AssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
 
   // Handle attachment
   function handleAttachment() {
-    if (onSubmit) {
-      onSubmit(assignment.id);
-    }
+    Alert.alert(
+      'Add attachment')
+  };
+
+  const getTeacherAttachment = async (filename: string) => {
+    const res = await apiJson.get(`/api/assignment/${assignment.classId}/${assignment.id}/${filename}`);
+    return res.data;
+  };
+
+  const getStudentAttachment = async (filename: string) => {
+    const res = await apiJson.get(`/api/assignment/${assignment.classId}/${assignment.id}/${filename}`);
+    return res.data;
   };
 
   return (
@@ -81,24 +113,53 @@ const AssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
       
       <View style={styles.assignmentBody}>
         <Text style={styles.assignmentTitle}>{assignment.title}</Text>
+
         <Text style={styles.assignmentDeadline}>{displayDeadline}</Text>
         
         <View style={styles.assignmentInstructions}>
           <Text style={styles.instructionTitle}>Instructions</Text>
-          <Text style={styles.instructionText}>{assignment.content}</Text>
+          <Text style={styles.instructionText}>{assignment.description}</Text>
+          
+          {assignment.filesName.map((file, index) => (
+            <TouchableOpacity 
+              key={index} 
+              onPress={() => getTeacherAttachment(file)} 
+              style={styles.filesContainer}
+            >
+              <Ionicons name='document-text-outline' size={16} color='#5E5CFF' />
+              <Text style={styles.file}>{file}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <View style={styles.myWork}>
-          <Text style={styles.workTitle}>My work</Text>
-          {attachment && <Text style={styles.workText}></Text>}
-        </View>
-        
-        <View style={styles.assignmentActions}>
-          <View style={styles.attachments}>
-            <TouchableOpacity onPress={handleAttachment}>
-              <Text style={styles.attachmentIcon}>📎 Add work</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.assignmentSubmissions}>
+          <Text style={styles.submissionTitle}>My work</Text>
+
+          <TouchableOpacity 
+            onPress={handleAttachment} 
+            style={styles.addFileContainer}
+            disabled={addAttachment}
+          >
+            <Ionicons 
+              name='attach-outline' 
+              size={16} 
+              color='#ACAAAA' 
+              style={{ transform: [{ rotate: '30deg' }] }}
+            />
+            <Text style={styles.addFile}>Add work</Text>
+          </TouchableOpacity>
+
+          {submission && 
+            submission.filesName.map((file, index) => (
+              <TouchableOpacity 
+                key={index} 
+                onPress={() => getStudentAttachment(file)} 
+                style={styles.filesContainer}
+              >
+                <Ionicons name='document-text-outline' size={16} color='#5E5CFF' />
+                <Text style={styles.file}>{file}</Text>
+              </TouchableOpacity>
+            ))}
         </View>
         
         <View style={styles.assignmentFooter}>
@@ -182,10 +243,25 @@ const styles = StyleSheet.create({
     color: '#202124',
     fontSize: 15,
   },
-  myWork: {
+  filesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 6, 
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: '#f5f7fabe',
+    marginBottom: 8,
+    borderColor: '#e3e4e5',
+    borderWidth: 1,
+  },
+  file: {
+    color: '#5E5CFF',
+  },
+  assignmentSubmissions: {
     marginBottom: 16,
   },
-  workTitle: {
+  submissionTitle: {
     marginVertical: 4,
     color: '#70757a',
     fontWeight: '500',
@@ -196,19 +272,16 @@ const styles = StyleSheet.create({
     color: '#202124',
     fontSize: 15,
   },
-  assignmentActions: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  attachments: {
+  addFileContainer: {
+    marginBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 5,
   },
-  attachmentIcon: {
-    color: '#5E5CFF',
-    fontSize: 14,
-    marginRight: 16,
+  addFile: {
+    color: '#ACAAAA',
+    fontSize: 15,
+    fontStyle: 'italic',
   },
   assignmentFooter: {
     paddingTop: 16,

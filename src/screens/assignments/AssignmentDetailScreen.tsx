@@ -62,7 +62,7 @@ const AssignmentDetailScreen = () => {
             <Ionicons name='arrow-back' size={24} color='black' />
         </Pressable>
         <View style={styles.headerInfo}>
-            <Text style={styles.title}>{assignment.teamName}</Text>
+            <Text style={styles.title}>{assignment.className}</Text>
         </View>
       </View>    
 
@@ -72,18 +72,14 @@ const AssignmentDetailScreen = () => {
           //   assignment={assignment}
           //   onSubmit={() => {}}
           // />
-          <View>Okee</View>
+          <Text>Oke teacher</Text>
         ) : (
-          // <AssignmentCard
-          //   assignment={assignment}
-          //   onSubmit={() => {}}
-          // />
-          <View>Oke</View>
+          <AssignmentCard
+            assignment={assignment}
+            onSubmit={() => {}}
+          />
+          // <Text>Oke student</Text>
         )}
-        {/* <AssignmentCard
-          assignment={assignment}
-          onSubmit={() => {}}
-        /> */}
       </View>
     </KeyboardAvoidingView>
   );

@@ -78,9 +78,9 @@ const TeamAssignmentScreen = () => {
             description: item.description,
             deadLine: item.deadLine,
             createBy: item.createBy,
-            fileName: item.fileName,
-            submission: item.submission || null,
-            teamName: team.name,
+            filesName: item.filesName,
+            className: team.name,
+            classId: team.id,
           }
         });
         setAssignments(assignments);

@@ -30,9 +30,9 @@ export interface IAssignment {
   description: string;
   deadLine: string;
   createBy: string;
-  fileName: Array<string>;
-  submission?: string;
-  teamName: string;
+  filesName: Array<string>;
+  className: string;
+  classId: string;
 }
 
 export interface IAssignmentCreation {
@@ -50,6 +50,12 @@ export interface IFileUpload {
   type: string | undefined;
 }
 
+export interface IStudentSubmission {
+  id: string;
+  submissionTime: string;
+  filesName: Array<string>;
+  score?: number;
+}
 
 ////////////////
 export type RootStackParamList = {
