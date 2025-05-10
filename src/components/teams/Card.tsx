@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Image } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Image, Modal, Alert } from "react-native";
 import { FontAwesome5, Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
+import api from "@/src/api/axios";
 
 // Định nghĩa kiểu dữ liệu cho comments
 type Comment = {
@@ -10,30 +11,36 @@ type Comment = {
     time: string;
 };
 
-interface CardProps {
+export interface CardProps {
     id: string;
     author: string;
+    title: string;
     content: string;
     time: string;
+    onDelete?: (id: string) => void; // Thêm callback onDelete
+    currentUser?: string; // Thêm để kiểm tra nếu người dùng hiện tại là tác giả
 }
 
 export default function Card(data: CardProps) {
     const [showReplyInput, setShowReplyInput] = useState(false);
     const [replyText, setReplyText] = useState('');
+    const [showMenu, setShowMenu] = useState(false);
     const [comments, setComments] = useState<Comment[]>([
-        {
-            id: '1',
-            author: 'Nguyễn Văn A',
-            content: 'Đúng vậy, AI đang thay đổi tương lai của lập trình rất nhiều.',
-            time: '9:30 15 thg 4',
-        },
-        {
-            id: '2',
-            author: 'Trần Thị B',
-            content: 'Tôi vẫn thích code thủ công hơn, giúp hiểu sâu vấn đề.',
-            time: '10:15 15 thg 4',
-        },
+        // {
+        //     id: '1',
+        //     author: 'Nguyễn Văn A',
+        //     content: 'Đúng vậy, AI đang thay đổi tương lai của lập trình rất nhiều.',
+        //     time: '9:30 15 thg 4',
+        // },
+        // {
+        //     id: '2',
+        //     author: 'Trần Thị B',
+        //     content: 'Tôi vẫn thích code thủ công hơn, giúp hiểu sâu vấn đề.',
+        //     time: '10:15 15 thg 4',
+        // },
     ]);
+
+    console.log(data.author + " " + data.currentUser);
     
     // Hàm xử lý khi gửi bình luận
     const handleSendComment = () => {
@@ -56,6 +63,39 @@ export default function Card(data: CardProps) {
         setShowReplyInput(!showReplyInput);
         setReplyText('');
     };
+    
+    // Hàm hiển thị menu
+    const toggleMenu = () => {
+        setShowMenu(!showMenu);
+    };
+    
+    // Hàm xóa bài viết
+    const handleDelete = () => {
+        Alert.alert(
+            "Xác nhận xóa",
+            "Bạn có chắc chắn muốn xóa bài viết này không?",
+            [
+                { text: "Hủy", style: "cancel" },
+                { 
+                    text: "Xóa", 
+                    style: "destructive",
+                    onPress: async () => {
+                        // Xử lý xóa bài viết ở đây
+
+                        await api.delete(`/api/posts/${data.id}`);
+
+                        setShowMenu(false);
+                        if (data.onDelete) {
+                            data.onDelete(data.id);
+                        }
+                    } 
+                }
+            ]
+        );
+    };
+
+    // Kiểm tra xem người dùng hiện tại có phải là tác giả không
+    const isAuthor = data.currentUser === data.author;
 
     return (
         <KeyboardAvoidingView
@@ -70,10 +110,38 @@ export default function Card(data: CardProps) {
                         <Text style={styles.timestamp}>{data.time}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.menuButton}>
-                    <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
-                </TouchableOpacity>
+                <View style={styles.menuContainer}>
+                    <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
+                        <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
+                    </TouchableOpacity>
+                    
+                    {/* Menu dropdown */}
+                    {showMenu && (
+                        <View style={styles.dropdownMenu}>
+                            {isAuthor && (
+                                <TouchableOpacity style={styles.menuItem} onPress={handleDelete}>
+                                    <AntDesign name="delete" size={16} color="#FF3B30" />
+                                    <Text style={styles.deleteText}>Xóa bài viết</Text>
+                                </TouchableOpacity>
+                            )}
+                            {/* <TouchableOpacity 
+                                style={styles.menuItem} 
+                                onPress={() => {
+                                    // Thêm chức năng báo cáo tại đây
+                                    Alert.alert("Báo cáo", "Chức năng đang được phát triển");
+                                    setShowMenu(false);
+                                }}
+                            >
+                                <Ionicons name="flag" size={16} color="#666" />
+                                <Text style={styles.menuItemText}>Báo cáo</Text>
+                            </TouchableOpacity> */}
+                        </View>
+                    )}
+                </View>
             </View>
+            
+            {/* Hiển thị tiêu đề bài đăng */}
+            <Text style={styles.postTitle}>{data.title}</Text>
             
             <Text style={styles.postContent}>
                 {data.content}
@@ -178,11 +246,53 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#757575'
     },
+    menuContainer: {
+        position: 'relative',
+    },
     menuButton: {
-        padding: 5
+        padding: 8,
+    },
+    dropdownMenu: {
+        position: 'absolute',
+        top: 35,
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3.84,
+        elevation: 5,
+        width: 150,
+        zIndex: 1000,
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    menuItemText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#212121',
+    },
+    deleteText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#FF3B30',
+        fontWeight: '500',
+    },
+    postTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#212121',
+        marginTop: 6,
+        marginBottom: 10,
+        lineHeight: 24
     },
     postContent: {
-        marginTop: 6,
         marginBottom: 16,
         fontSize: 15,
         lineHeight: 22,

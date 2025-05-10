@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import Card from "@/src/components/teams/Card";
+import React, { useEffect, useState, useContext } from "react";
+import Card, { CardProps } from "@/src/components/teams/Card";
 import { 
     ScrollView, 
     StyleSheet, 
@@ -11,33 +11,93 @@ import {
     KeyboardAvoidingView,
     Platform,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard,
+    ActivityIndicator,
+    Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import api from "@/src/api/axios";
+import { GeneralScreenRouteProp } from "@/src/navigation/type";
+import { useRoute } from "@react-navigation/native";
+import { AuthContext } from "@/src/context/authContext";
 
 export default function PostScreen() {
     const [showPostForm, setShowPostForm] = useState(false);
+    const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
+    const route = useRoute<GeneralScreenRouteProp>();
+    const { team } = route.params;
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [state] = useContext(AuthContext);
+    const currentUser = state.info.name;
+    
+    const fetchPosts = async () => {
+        try {
+            setRefreshing(true);
+            const response = await api.get(`/api/posts/class/${team.id}`);
+            console.log("Post class data:", response.data);
+
+            setPosts(response.data.map((post: any) => ({
+                id: post.id,
+                content: post.content,
+                title: post.title,
+                time: new Date(post.createdAt).toLocaleString(),
+                author: post.teacherName,
+            })));
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+            Alert.alert("Lỗi", "Không thể tải bài đăng. Vui lòng thử lại sau.");
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            const response = await api.get("/api/posts/class/1");
-            console.log("Post class data:", response.data);
-        };
-
-        fetchData();
-    });
+        fetchPosts();
+    }, []);
 
     // Xử lý đăng bài viết
-    const handlePostSubmit = () => {
-        if (postContent.trim()) {
-            console.log("Đăng bài:", postContent);
-            // Ở đây bạn sẽ thêm code để lưu bài đăng vào state hoặc gửi lên server
+    const handlePostSubmit = async () => {
+        if (postTitle.trim() && postContent.trim()) {
+            try {
+                setRefreshing(true);
+                await api.post("/api/posts", {
+                    classId: team.id,
+                    title: postTitle,
+                    content: postContent,
+                });
+
+                // Reset form và đóng
+                setPostTitle("");
+                setPostContent("");
+                setShowPostForm(false);
+                
+                // Tải lại danh sách bài đăng
+                await fetchPosts();
+            } catch (error) {
+                console.error("Error creating post:", error);
+                Alert.alert("Lỗi", "Không thể đăng bài. Vui lòng thử lại sau.");
+                setRefreshing(false);
+            }
+        }
+    };
+
+    // Hàm xử lý xóa bài viết
+    const handleDeletePost = async (postId: string) => {
+        try {
+            setRefreshing(true);
+            await api.delete(`/api/posts/${postId}`);
             
-            // Reset form và đóng
-            setPostContent("");
-            setShowPostForm(false);
+            // Cập nhật state để xóa bài viết khỏi UI
+            setPosts(posts.filter(post => post.id !== postId));
+            Alert.alert("Thành công", "Đã xóa bài viết");
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            Alert.alert("Lỗi", "Không thể xóa bài viết. Vui lòng thử lại sau.");
+        } finally {
+            setRefreshing(false);
         }
     };
 
@@ -46,53 +106,42 @@ export default function PostScreen() {
         Keyboard.dismiss();
     };
 
-    // Mock data for posts
-    const [posts] = useState([
-        {
-            id: "1",
-            author: "Nguyen Van A",
-            content: "Hôm nay là một ngày tuyệt vời để học React Native!",
-            time: "2 giờ trước",
-        },
-        {
-            id: "2",
-            author: "Tran Thi B",
-            content: "Đã ai hoàn thành bài tập tuần này chưa? Tôi đang gặp một số khó khăn với phần animation.",
-            time: "3 giờ trước",
-        },
-        {
-            id: "3",
-            author: "Le Van C",
-            content: "Chia sẻ một số tài liệu học tập về React Native mà tôi thấy hữu ích. Link: reactnative.dev",
-            time: "5 giờ trước",
-        },
-        {
-            id: "4",
-            author: "Pham Thi D",
-            content: "Vừa hoàn thành dự án đầu tiên với React Native. Cảm giác thật tuyệt vời!",
-            time: "1 ngày trước",
-        },
-        {
-            id: "5",
-            author: "Hoang Van E",
-            content: "Ai có kinh nghiệm làm việc với Firebase trong React Native không? Tôi cần một số lời khuyên.",
-            time: "2 ngày trước",
-        },
-    ]);
+    // State cho posts
+    const [posts, setPosts] = useState<CardProps[]>([]);
 
     return (
         <View style={{ flex: 1 }}>
-            <ScrollView contentContainerStyle={styles.container}>
-                {posts.map((post) => (
-                    <Card
-                        key={post.id} 
-                        id={post.id}
-                        author={post.author} 
-                        content={post.content} 
-                        time={post.time} 
-                    />
-                ))}
-            </ScrollView>
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#4285F4" />
+                    <Text style={styles.loadingText}>Đang tải bài viết...</Text>
+                </View>
+            ) : (
+                <ScrollView contentContainerStyle={styles.container}>
+                    {posts.length === 0 ? (
+                        <Text style={styles.emptyText}>Chưa có bài viết nào.</Text>
+                    ) : (
+                        posts.map((post) => (
+                            <Card
+                                key={post.id} 
+                                id={post.id}
+                                author={post.author}
+                                title={post.title}
+                                content={post.content} 
+                                time={post.time}
+                                onDelete={handleDeletePost}
+                                currentUser={currentUser}
+                            />
+                        ))
+                    )}
+                </ScrollView>
+            )}
+
+            {refreshing && (
+                <View style={styles.refreshOverlay}>
+                    <ActivityIndicator size="large" color="#4285F4" />
+                </View>
+            )}
 
             {/* Floating button để đăng bài */}
             <TouchableOpacity 
@@ -122,27 +171,41 @@ export default function PostScreen() {
                                 </TouchableOpacity>
                             </View>
 
+                            {/* Thêm input cho tiêu đề */}
                             <TextInput
-                                style={styles.input}
-                                placeholder="Viết nội dung bài đăng..."
+                                style={styles.titleInput}
+                                placeholder="Tiêu đề bài đăng..."
+                                value={postTitle}
+                                onChangeText={setPostTitle}
+                                maxLength={100}
+                                autoFocus
+                            />
+                            
+                            {/* Input cho nội dung */}
+                            <TextInput
+                                style={styles.contentInput}
+                                placeholder="Nội dung bài đăng..."
                                 value={postContent}
                                 onChangeText={setPostContent}
                                 multiline
                                 numberOfLines={5}
                                 textAlignVertical="top"
-                                autoFocus
                             />
 
                             <View style={styles.buttonContainer}>
                                 <TouchableOpacity 
                                     style={[
                                         styles.postButton,
-                                        !postContent.trim() && styles.disabledButton
+                                        (!postTitle.trim() || !postContent.trim() || refreshing) && styles.disabledButton
                                     ]}
                                     onPress={handlePostSubmit}
-                                    disabled={!postContent.trim()}
+                                    disabled={!postTitle.trim() || !postContent.trim() || refreshing}
                                 >
-                                    <Text style={styles.postButtonText}>Đăng bài</Text>
+                                    {refreshing ? (
+                                        <ActivityIndicator size="small" color="#FFFFFF" />
+                                    ) : (
+                                        <Text style={styles.postButtonText}>Đăng bài</Text>
+                                    )}
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -159,6 +222,31 @@ const styles = StyleSheet.create({
         padding: 20,
         gap: 20,
         paddingBottom: 80, // Thêm padding bottom để tránh bị che bởi floating button
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+    },
+    emptyText: {
+        textAlign: 'center',
+        marginTop: 20, 
+        color: '#666',
+        fontSize: 16,
+    },
+    refreshOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
     },
     floatingButton: {
         position: "absolute",
@@ -202,7 +290,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
     },
-    input: {
+    titleInput: {
+        borderWidth: 1,
+        borderColor: "#E0E0E0",
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        fontWeight: "500",
+        marginBottom: 12,
+    },
+    contentInput: {
         borderWidth: 1,
         borderColor: "#E0E0E0",
         borderRadius: 8,
@@ -219,6 +316,8 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 20,
         borderRadius: 8,
+        minWidth: 100,
+        alignItems: 'center',
     },
     disabledButton: {
         backgroundColor: "#BDBDBD",
