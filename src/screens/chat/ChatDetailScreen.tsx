@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useContext } from "react";
 import { Chat } from "@/src/components/chat/CardChat";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
@@ -13,8 +13,13 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    Image
+    Image,
+    ActivityIndicator,
+    Alert
 } from "react-native";
+import { io, Socket } from "socket.io-client";
+import { apiJson } from "@/src/api/axios";
+import { AuthContext } from "@/src/context/authContext";
 
 type ChatDetailScreenRouteProp = RouteProp<{
     ChatDetailScreen: { chat: Chat };
@@ -25,8 +30,17 @@ interface Message {
     id: string;
     text: string;
     senderId: string;
+    receiverId: string;
     timestamp: string;
     isSentByMe: boolean;
+}
+
+// Định nghĩa cấu trúc tin nhắn WebSocket theo backend
+interface ChatRequest {
+    type: 'JOIN' | 'CHAT';
+    sender: string;
+    receiver: string;
+    message?: string;
 }
 
 export default function ChatDetailScreen() {
@@ -36,67 +50,210 @@ export default function ChatDetailScreen() {
     const navigation = useNavigation();
     const [newMessage, setNewMessage] = useState("");
     const flatListRef = useRef<FlatList>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [connecting, setConnecting] = useState(false);
+    const [state] = useContext(AuthContext);
+    const websocketRef = useRef<WebSocket | null>(null);
+    const currentUsername = state.info.username;
+    const token = state.token;
 
-    // Dữ liệu mẫu - tin nhắn ban đầu
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "1",
-            text: "Chào bạn, bạn co biet su dung AI để code khong?",
-            senderId: chat.id,
-            timestamp: "10:30",
-            isSentByMe: false
-        },
-        {
-            id: "2",
-            text: "Mình khong, còn bạn thì sao?",
-            senderId: "me",
-            timestamp: "10:31",
-            isSentByMe: true
-        },
-        {
-            id: "3",
-            text: "Mình cũng vậy. Nhưng nếu không biết sử dụng AI thì chúng mình sẽ bị thầy Duy mắng",
-            senderId: chat.id,
-            timestamp: "10:32",
-            isSentByMe: false
-        },
-        {
-            id: "4",
-            text: "Vậy thì chúng mình cùng nhau học AI nhé",
-            senderId: "me",
-            timestamp: "10:33",
-            isSentByMe: true
-        },
-        {
-            id: "5",
-            text: "oke bạn. Let's go",
-            senderId: chat.id,
-            timestamp: "10:35",
-            isSentByMe: false
+    // Kết nối tới WebSocket server
+    useEffect(() => {
+        if (!token) {
+            Alert.alert("Lỗi", "Bạn cần đăng nhập để sử dụng chat");
+            navigation.goBack();
+            return;
         }
-    ]);
+
+        const connectWebSocket = () => {
+            try {
+                setConnecting(true);
+                
+                // // URL WebSocket server với token xác thực
+                const WS_URL = `${apiJson.defaults.baseURL?.replace('http', 'ws') || 'ws://localhost:8080'}/websocket?token=${token}`;
+                
+                // // Tạo kết nối WebSocket mới
+                const ws = new WebSocket(WS_URL);
+                websocketRef.current = ws;
+
+                // console.log("Connecting to WebSocket:", WS_URL);
+                
+                // // Xử lý sự kiện kết nối thành công
+                ws.onopen = () => {
+                    console.log("WebSocket connected");
+                    setConnecting(false);
+                    
+                    // Gửi tin nhắn JOIN để thiết lập kết nối
+                    const joinMessage: ChatRequest = {
+                        type: 'JOIN',
+                        sender: currentUsername,
+                        receiver: chat.username
+                    };
+                    
+                    ws.send(JSON.stringify(joinMessage));
+                };
+                
+                // // Xử lý tin nhắn nhận được
+                ws.onmessage = (event) => {
+                    try {
+                        const receivedData = JSON.parse(event.data);
+                        console.log("Received message:", receivedData);
+                        
+                        // Kiểm tra nếu là tin nhắn CHAT
+                        if (receivedData.type === 'CHAT') {
+                            // Chuyển đổi message từ server thành định dạng phù hợp
+                            const newMsg: Message = {
+                                id: receivedData.id || Date.now().toString(),
+                                text: receivedData.message,
+                                senderId: receivedData.sender,
+                                receiverId: receivedData.receiver,
+                                timestamp: new Date(receivedData.timestamp || Date.now()).toLocaleTimeString([], { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                }),
+                                isSentByMe: receivedData.sender === currentUsername
+                            };
+                            
+                            // Thêm tin nhắn mới vào danh sách
+                            setMessages(prevMessages => [...prevMessages, newMsg]);
+                        }
+                    } catch (error) {
+                        console.error("Error parsing WebSocket message:", error);
+                    }
+                };
+                
+                // // Xử lý lỗi
+                ws.onerror = (error) => {
+                    console.error("WebSocket error:", error);
+                    setConnecting(false);
+                };
+                
+                // Xử lý sự kiện đóng kết nối
+                ws.onclose = (event) => {
+                    console.log("WebSocket connection closed:", event.code, event.reason);
+                    setConnecting(false);
+                    
+                    // Thử kết nối lại sau 3 giây nếu bị đóng không mong muốn
+                    if (event.code !== 1000) { // 1000 là đóng bình thường
+                        setTimeout(() => {
+                            if (websocketRef.current === ws) { // Đảm bảo đây là kết nối cần được kết nối lại
+                                connectWebSocket();
+                            }
+                        }, 3000);
+                    }
+                };
+            } catch (error) {
+                console.error("Error connecting to WebSocket:", error);
+                setConnecting(false);
+            }
+        };
+        
+        connectWebSocket();
+        
+        // Cleanup khi component unmount
+        return () => {
+            if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+                websocketRef.current.close();
+                websocketRef.current = null;
+            }
+        };
+    }, [currentUsername, chat.username, token]);
+
+    // Tải lịch sử tin nhắn khi vào màn hình chat
+    useEffect(() => {
+        const fetchChatHistory = async () => {
+            try {
+                setLoading(true);
+                
+                // Gọi API lấy lịch sử chat
+                const response = await apiJson.get(`/api/message`, {
+                    params: {
+                        user1: currentUsername,
+                        user2: chat.username,
+                        // lastTime: new Date().toISOString()
+                    }
+                });
+
+                console.log("Chat history response:", response.data);
+                
+                if (response && response.data && response.data.result.length > 0) {
+                    const formattedMessages = response.data.result.map((msg: any) => ({
+                        id: msg.id || Date.now().toString(),
+                        text: msg.message,
+                        senderId: msg.sender,
+                        receiverId: msg.receiver,
+                        timestamp: new Date(msg.timestamp).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        }),
+                        isSentByMe: msg.sender === currentUsername
+                    })).reverse();
+                    
+                    // Cập nhật danh sách tin nhắn
+                    setMessages(formattedMessages);
+                }
+
+                
+            } catch (error) {
+                console.error("Error fetching chat history:", error);
+                // Hiển thị thông báo lỗi
+                Alert.alert("Lỗi", "Không thể tải lịch sử chat. Vui lòng thử lại sau.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchChatHistory();
+    }, [currentUsername, chat.username]);
 
     // Cuộn xuống tin nhắn mới nhất khi mở màn hình hoặc có tin nhắn mới
     useEffect(() => {
-        setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-    }, [messages]);
+        if (!loading && messages.length > 0) {
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        }
+    }, [messages, loading]);
 
     // Xử lý gửi tin nhắn
     const handleSendMessage = () => {
-        if (newMessage.trim() === "") return;
+        if (newMessage.trim() === "" || !websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
+            if (websocketRef.current?.readyState !== WebSocket.OPEN) {
+                Alert.alert("Lỗi", "Không thể kết nối đến server, vui lòng thử lại sau");
+            }
+            return;
+        }
 
-        const newMessageObj: Message = {
-            id: Date.now().toString(),
-            text: newMessage,
-            senderId: "me",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isSentByMe: true
+        // Tạo đối tượng tin nhắn theo định dạng của server
+        const messageData: ChatRequest = {
+            type: 'CHAT',
+            sender: currentUsername,
+            receiver: chat.username,
+            message: newMessage,
+            // timestamp: new Date().toISOString()
         };
 
-        setMessages([...messages, newMessageObj]);
-        setNewMessage("");
+        // Gửi tin nhắn qua WebSocket
+        try {
+            websocketRef.current.send(JSON.stringify(messageData));
+            
+            // Thêm tin nhắn vào state local để hiển thị ngay
+            const newMessageObj: Message = {
+                id: Date.now().toString(),
+                text: newMessage,
+                senderId: currentUsername,
+                receiverId: chat.username,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                isSentByMe: true
+            };
+
+            setMessages([...messages, newMessageObj]);
+            setNewMessage("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+            Alert.alert("Lỗi", "Không thể gửi tin nhắn. Vui lòng thử lại.");
+        }
     };
 
     useFocusEffect(() => {
@@ -145,7 +302,12 @@ export default function ChatDetailScreen() {
                     ]}>
                         {item.text}
                     </Text>
-                    <Text style={styles.timestamp}>{item.timestamp}</Text>
+                    <Text style={[
+                        styles.timestamp, 
+                        item.isSentByMe ? styles.myTimestamp : styles.otherTimestamp
+                    ]}>
+                        {item.timestamp}
+                    </Text>
                 </View>
             </View>
         );
@@ -162,7 +324,8 @@ export default function ChatDetailScreen() {
                     <Ionicons name="arrow-back" size={24} color="black" />
                 </Pressable>
                 <View style={styles.headerInfo}>
-                    <Text style={styles.title}>{chat.name}</Text>
+                    <Text style={styles.title}>{chat.username}</Text>
+                    {connecting && <Text style={styles.connectingStatus}>Đang kết nối...</Text>}
                 </View>
                 <TouchableOpacity style={styles.headerButton}>
                     <Ionicons name="call" size={22} color="#4285F4" />
@@ -172,14 +335,21 @@ export default function ChatDetailScreen() {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                renderItem={renderMessage}
-                keyExtractor={(item) => item.id}
-                style={styles.messagesList}
-                contentContainerStyle={styles.messagesContainer}
-            />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#4285F4" />
+                    <Text style={styles.loadingText}>Đang tải tin nhắn...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    renderItem={renderMessage}
+                    keyExtractor={(item) => item.id}
+                    style={styles.messagesList}
+                    contentContainerStyle={styles.messagesContainer}
+                />
+            )}
 
             <View style={styles.inputContainer}>
                 <TouchableOpacity style={styles.attachButton}>
@@ -197,15 +367,20 @@ export default function ChatDetailScreen() {
                 <TouchableOpacity 
                     style={[
                         styles.sendButton,
-                        !newMessage.trim() ? styles.sendButtonDisabled : {}
+                        (!newMessage.trim() || loading || connecting || 
+                         websocketRef.current?.readyState !== WebSocket.OPEN) ? 
+                            styles.sendButtonDisabled : {}
                     ]}
                     onPress={handleSendMessage}
-                    disabled={!newMessage.trim()}
+                    disabled={!newMessage.trim() || loading || connecting || 
+                             websocketRef.current?.readyState !== WebSocket.OPEN}
                 >
                     <Ionicons 
                         name="send" 
                         size={20} 
-                        color={!newMessage.trim() ? "#BDBDBD" : "white"} 
+                        color={(!newMessage.trim() || loading || connecting || 
+                                websocketRef.current?.readyState !== WebSocket.OPEN) ? 
+                                    "#BDBDBD" : "white"} 
                     />
                 </TouchableOpacity>
             </View>
@@ -239,9 +414,9 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
     },
-    onlineStatus: {
+    connectingStatus: {
         fontSize: 12,
-        color: '#4CAF50',
+        color: '#FFA000',
         marginTop: 2,
     },
     headerButton: {
@@ -305,7 +480,12 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         opacity: 0.7,
         marginTop: 2,
+    },
+    myTimestamp: {
         color: '#EEEEEE',
+    },
+    otherTimestamp: {
+        color: '#999999',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -338,6 +518,16 @@ const styles = StyleSheet.create({
     },
     sendButtonDisabled: {
         backgroundColor: '#F5F5F5',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+        fontSize: 15,
     },
 });
 

@@ -41,11 +41,17 @@ export default function AttendanceScreen() {
                 // console.log("Attendance data:", response.data);
                 if (response && response.data) {
                     // console.log("Attendance data:", response.data);
-                    const attendanceRecords: AttendanceRecord[] = response.data.map((record: any) => ({
-                        date: record.lessonDate,
-                        time: record.checkinDate,
-                        status: record.status,
-                    }));
+                    const attendanceRecords: AttendanceRecord[] = response.data.map((record: any) => {
+                        // Parse the date and format to DD/MM/YYYY
+                        const date = new Date(record.lessonDate);
+                        const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                        
+                        return {
+                            date: formattedDate,
+                            time: record.checkinDate,
+                            status: record.status,
+                        };
+                    });
                     setData(attendanceRecords);
                 }
             } else if (state.info.role === "TEACHER") {
@@ -53,12 +59,36 @@ export default function AttendanceScreen() {
                 // console.log("Lesson data:", response.data);
 
                 if (response && response.data) {
-                    const lessonRecords: LessonRecord[] = response.data.map((record: any) => ({
-                        lessonDate: record.lessonDate,
-                        startTime: record.startTime,
-                        endTime: record.endTime,
-                        id: record.id,
-                    }));
+                    const lessonRecords: LessonRecord[] = response.data.map((record: any) => {
+                        // Parse the date and format to DD/MM/YYYY
+                        const date = new Date(record.lessonDate);
+                        const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+                        
+                        // Extract just hours and minutes from time strings
+                        const formatTime = (timeStr: string) => {
+                            if (!timeStr) return "";
+                            // Handle full datetime strings by extracting only time portion
+                            try {
+                                const date = new Date(timeStr);
+                                if (!isNaN(date.getTime())) {
+                                    return date.toTimeString().substring(0, 5); // Get HH:MM format
+                                }
+                            } catch (e) {
+                                // Continue if parsing fails
+                            }
+                            
+                            // Fallback to simple extraction for time-only strings
+                            const timeParts = timeStr.split(':');
+                            return timeParts.length >= 2 ? `${timeParts[0]}:${timeParts[1]}` : timeStr;
+                        };
+                        
+                        return {
+                            id: record.id,
+                            lessonDate: formattedDate,
+                            startTime: formatTime(record.startTime),
+                            endTime: formatTime(record.endTime)
+                        };
+                    });
                     setLessonData(lessonRecords);
                 }
 

@@ -102,8 +102,10 @@ export default function TeamsScreen() {
             id: item.id,
             name: item.name,
             initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
-            description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
+            description: ` Weeks: ${item.numberOfWeeks || 'N/A'}`,
           }));
+
+          // Room: ${item.lessons[0].room || 'N/A'},
 
           console.log('Transformed teams data:', transformedData);
           setTeams(transformedData);
@@ -355,60 +357,35 @@ export default function TeamsScreen() {
       }
     });
 
-    // // Create a new team object
-    // const newTeam: Team = {
-    //   id: (teams.length + 1).toString(),
-    //   name: formData.className,
-    //   initials: formData.className.substring(0, 2).toUpperCase(),
-    //   description: `Room: ${formData.roomName}, Weeks: ${formData.weeks}`,
-    //   // Add additional fields if needed in your Team interface
-    //   // schedule: scheduleData
-    // };
+    try {
+      // Wait for the class creation to complete
+      await apiJson.post('/api/classes', {
+        name: formData.className,
+        numberOfWeeks: formData.weeks,
+        dateStudy: scheduleData.reduce((result, { day, startTime, endTime }) => {
+          result[day] = {
+            startTime: `${startTime}:00`,
+            endTime: `${endTime}:00`
+          };
+          return result;
+        }, {} as Record<string, { startTime: string; endTime: string }>)
+      });
 
-    // // Add the new team to the list
-    // setTeams([...teams, newTeam]);
+      // Show success message
+      Alert.alert('Success', 'New class has been created successfully');
 
-    // Log the full data for debugging
-    console.log('Form submitted successfully:', {
-      className: formData.className,
-      weeks: formData.weeks,
-      roomName: formData.roomName,
-      schedule: scheduleData
-    });
-
-    scheduleData.forEach((schedule) => {
-      console.log(`Day: ${schedule.day}, Start Time: ${schedule.startTime}, End Time: ${schedule.endTime}`);
-    });
-
-    apiJson.post('/api/classes', {
-      name: formData.className,
-      numberOfWeeks: formData.weeks,
-      dateStudy: scheduleData.reduce((result, { day, startTime, endTime }) => {
-        result[day] = {
-          startTime: `${startTime}:00`,
-          endTime: `${endTime}:00`
-        };
-        return result;
-      }, {} as Record<string, { startTime: string; endTime: string }>)
-    });
-
-    // const res = await api.get('/api/classes/teacher');
-    // setTeams(res.data.result.map((item: any) => ({
-    //     id: item.id,
-    //     name: item.name,
-    //     initials: (removeVietnameseTones(item.name || '')).substring(0, 2).toUpperCase(),
-    //     description: `Room: ${item.lessons[0].room || 'N/A'}, Weeks: ${item.numberOfWeeks || 'N/A'}`,
-    //   })));
-
-    fetchTeams();
-
-    // Show success message
-    Alert.alert('Success', 'New class has been created successfully');
-
-    // Reset form and close modal
-    resetForm();
-    setIsFormVisible(false);
-    // fetchTeams();
+      // Reset form and close modal
+      resetForm();
+      setIsFormVisible(false);
+      
+      // Add a small delay before fetching to ensure server has updated
+      setTimeout(() => {
+        fetchTeams();
+      }, 500);
+    } catch (error) {
+      console.error('Error creating class:', error);
+      Alert.alert('Error', 'Failed to create class. Please try again.');
+    }
   };
 
   const renderTeamItem = ({ item }: { item: Team }) => (

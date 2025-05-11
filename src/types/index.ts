@@ -1,4 +1,3 @@
-
 export interface IUser {
   token: string;
   info: {

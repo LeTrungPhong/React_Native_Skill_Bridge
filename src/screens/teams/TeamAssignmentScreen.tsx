@@ -222,6 +222,8 @@ const TeamAssignmentScreen = () => {
         form.append('files', fileToUpload);
       });
 
+      console.log('Sending data:', JSON.stringify(formData));
+      console.log('add assignment', `/api/assignment/${team.id}`);
       const res = await apiForm.post(`/api/assignment/${team.id}`, form);
       console.log('Response:', res.data);
 
@@ -231,9 +233,14 @@ const TeamAssignmentScreen = () => {
         setIsFormVisible(false);
         fetchAssignments();
       }
-    }catch(error){
-      console.error('Error adding assignment:', error);
-      Alert.alert('Error', 'Failed to add assignment. Please try again.');
+    }catch(error: any){
+      console.error('Error adding assignment:', error.message);
+      if (error.response) {
+        console.error('Error status:', error.response.status);
+        console.error('Error data:', JSON.stringify(error.response.data));
+        console.error('Error headers:', JSON.stringify(error.response.headers));
+      }
+      Alert.alert('Error', error.message.data || 'Failed to add assignment. Please try again.');
     }
   };
 

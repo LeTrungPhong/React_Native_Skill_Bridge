@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Tạo instance của axios
 const apiJson = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  // baseURL: 'http://192.168.1.5:8082/skillbridge',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -57,4 +56,5 @@ apiForm.interceptors.request.use(
 
 export {
   apiJson,
-  apiForm,};
+  apiForm,
+};
