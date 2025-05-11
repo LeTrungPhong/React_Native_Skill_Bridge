@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { IAssignment } from '@/src/types';
 import AssignmentCard from '@/src/components/assignments/AssignmentCard';
+import { AuthContext } from '@/src/context/authContext';
 
 type AssignmentDetailScreenRouteProp = RouteProp<
   { AssignmentDetailScreen: { assignment: IAssignment }; }, 
@@ -14,6 +15,8 @@ const AssignmentDetailScreen = () => {
   const route = useRoute<AssignmentDetailScreenRouteProp>();
   const { assignment } = route.params;
   const navigation = useNavigation();
+
+  const [state] = useContext(AuthContext);
 
   // Ẩn bottom tab bar khi vào màn hình chi tiết
   useFocusEffect(() => {
@@ -59,15 +62,24 @@ const AssignmentDetailScreen = () => {
             <Ionicons name='arrow-back' size={24} color='black' />
         </Pressable>
         <View style={styles.headerInfo}>
-            <Text style={styles.title}>{assignment.group}</Text>
+            <Text style={styles.title}>{assignment.className}</Text>
         </View>
       </View>    
 
       <View style={styles.content}>
-        <AssignmentCard
-          assignment={assignment}
-          onSubmit={() => {}}
-        />
+        {(state.info.role === 'TEACHER') ? (
+          // <AssignmentCard
+          //   assignment={assignment}
+          //   onSubmit={() => {}}
+          // />
+          <Text>Oke teacher</Text>
+        ) : (
+          <AssignmentCard
+            assignment={assignment}
+            onSubmit={() => {}}
+          />
+          // <Text>Oke student</Text>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

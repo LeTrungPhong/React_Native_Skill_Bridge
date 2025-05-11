@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { TeamsStackParamList } from '@/src/navigation/type';
 import { AuthContext } from '@/src/context/authContext';
-import api from '@/src/api/axios'; // Import your API utility
+import { apiJson } from '@/src/api/axios'; // Import your API utility
 
 type TeamsScreenNavigationProp = StackNavigationProp<TeamsStackParamList, 'TeamsList'>;
 
@@ -93,7 +93,7 @@ export default function TeamsScreen() {
     try {
       // Simulate fetching data from an API or local storage
       if (state.info.role == 'TEACHER') {
-        const data = await api.get('/api/classes/teacher') // Replace with your API endpoint
+        const data = await apiJson.get('/api/classes/teacher') // Replace with your API endpoint
         // const data = await response.json();
         console.log('Fetched teams:', data);
         if (data && data.data && data.data.result) {
@@ -111,7 +111,7 @@ export default function TeamsScreen() {
           setTeams(transformedData);
         }
       } else if (state.info.role == 'STUDENT') {
-        const data = await api.get('/api/classes/student') // Replace with your API endpoint
+        const data = await apiJson.get('/api/classes/student') // Replace with your API endpoint
         // const data = await response.json();
         console.log('Fetched teams:', data.data.result);
         if (data && data.data && data.data.result) {
@@ -144,7 +144,7 @@ export default function TeamsScreen() {
 
     try {
       // Gọi API để tìm kiếm lớp học theo ID
-      const response = await api.get(`/api/classes/${classIdToJoin}`);
+      const response = await apiJson.get(`/api/classes/${classIdToJoin}`);
       console.log('Found class:', response.data)
 
       if (response.data) {
@@ -173,7 +173,7 @@ export default function TeamsScreen() {
 
     try {
       // Gọi API để tham gia lớp học
-      await api.post(`/api/enrollments`, {
+      await apiJson.post(`/api/enrollments`, {
         'classId': foundClass.id,
       });
 
@@ -359,7 +359,7 @@ export default function TeamsScreen() {
 
     try {
       // Wait for the class creation to complete
-      await api.post('/api/classes', {
+      await apiJson.post('/api/classes', {
         name: formData.className,
         numberOfWeeks: formData.weeks,
         dateStudy: scheduleData.reduce((result, { day, startTime, endTime }) => {

@@ -18,7 +18,7 @@ import {
     Alert
 } from "react-native";
 import { io, Socket } from "socket.io-client";
-import api from "@/src/api/axios";
+import { apiJson } from "@/src/api/axios";
 import { AuthContext } from "@/src/context/authContext";
 
 type ChatDetailScreenRouteProp = RouteProp<{
@@ -71,7 +71,7 @@ export default function ChatDetailScreen() {
                 setConnecting(true);
                 
                 // // URL WebSocket server với token xác thực
-                const WS_URL = `${api.defaults.baseURL?.replace('http', 'ws') || 'ws://localhost:8080'}/websocket?token=${token}`;
+                const WS_URL = `${apiJson.defaults.baseURL?.replace('http', 'ws') || 'ws://localhost:8080'}/websocket?token=${token}`;
                 
                 // // Tạo kết nối WebSocket mới
                 const ws = new WebSocket(WS_URL);
@@ -167,7 +167,7 @@ export default function ChatDetailScreen() {
                 setLoading(true);
                 
                 // Gọi API lấy lịch sử chat
-                const response = await api.get(`/api/message`, {
+                const response = await apiJson.get(`/api/message`, {
                     params: {
                         user1: currentUsername,
                         user2: chat.username,

@@ -1,4 +1,4 @@
-import api from '@/src/api/axios';
+import { apiJson } from '@/src/api/axios';
 import { AuthContext } from '@/src/context/authContext';
 import { IUserAsyncStorage, RootStackParamList } from '@/src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -34,7 +34,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
         return;
       }
 
-      const response = await api.post('/log-in', { username, password });
+      const response = await apiJson.post('/log-in', { username, password });
       const newLogin: IUserAsyncStorage = {
         ...response.data.result,
         expiresAt: new Date((new Date()).getTime() + 30 * 60 * 1000).toISOString()
@@ -45,7 +45,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
       // Recent logins 
       const existingLoginsJson = await AsyncStorage.getItem('recentLogins');
       let recentLogins: IUserAsyncStorage[] = existingLoginsJson ? JSON.parse(existingLoginsJson) : [];
-      const existingLoginId = recentLogins.findIndex((login: IUserAsyncStorage) => login.info.id === newLogin.info.id);
+      const existingLoginId = recentLogins.findIndex((login: IUserAsyncStorage) => login.info.username === newLogin.info.username);
       if(existingLoginId !== -1){
         recentLogins[existingLoginId] = newLogin;
       }else{

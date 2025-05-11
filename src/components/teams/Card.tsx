@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Image, Modal, Alert } from "react-native";
 import { FontAwesome5, Ionicons, AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
-import api from "@/src/api/axios";
+import { apiJson } from "@/src/api/axios";
 import { AuthContext } from "@/src/context/authContext";
 
 // Định nghĩa kiểu dữ liệu cho comments
@@ -41,7 +41,7 @@ export default function Card(data: CardProps) {
     // Hàm lấy comments
     const fetchComments = async () => {
         try {
-            const response = await api.get(`/api/comments/post/${data.id}`);
+            const response = await apiJson.get(`/api/comments/post/${data.id}`);
             const commentsData = response.data.map((comment: any) => ({
                 id: comment.id,
                 author: comment.userFullName,
@@ -59,7 +59,7 @@ export default function Card(data: CardProps) {
     const handleSendComment = async () => {
         if (replyText.trim()) {
             try {
-                await api.post('/api/comments', {
+                await apiJson.post('/api/comments', {
                     postId: data.id,
                     content: replyText,
                 });
@@ -86,10 +86,10 @@ export default function Card(data: CardProps) {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await api.delete(`/api/comments/${commentId}`);
+                            await apiJson.delete(`/api/comments/${commentId}`);
                             // setComments(comments.filter(comment => comment.id !== commentId));
 
-                            const response = await api.get(`/api/comments/post/${data.id}`);
+                            const response = await apiJson.get(`/api/comments/post/${data.id}`);
                             const commentsData = response.data.map((comment: any) => ({
                                 id: comment.id,
                                 author: comment.userFullName,

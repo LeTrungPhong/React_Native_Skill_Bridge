@@ -1,4 +1,4 @@
-import api from '@/src/api/axios';
+import { apiJson } from '@/src/api/axios';
 import { RootStackParamList } from '@/src/types';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useEffect, useState } from 'react';
@@ -54,7 +54,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
       
       // Gọi API đăng ký ở đây
       try {
-        const response = await api.post('/register', {
+        const response = await apiJson.post('/register', {
           username,
           password,
           email,

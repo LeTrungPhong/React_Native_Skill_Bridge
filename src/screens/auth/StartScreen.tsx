@@ -3,7 +3,7 @@ import { IUser, IUserAsyncStorage, RootStackParamList } from '@/src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native'; // Sửa import từ đây
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, SafeAreaView, StatusBar } from 'react-native';
 
 type StartScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Start'>;
@@ -71,7 +71,7 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
     }, [])
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('Start Screen: State updated:', state);
   }, [users]);
 
@@ -120,7 +120,7 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
         {users && users.length > 0 ? (
           users.map((user: any, index) => (
             <TouchableOpacity 
-              key={user.info.id || index} 
+              key={index} 
               style={styles.userItem}
               onPress={() => {
                 saveAuth(user);

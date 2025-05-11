@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, FlatList } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '@/src/api/axios';
+import { apiJson } from '@/src/api/axios';
 
 // Định nghĩa kiểu cho params của route
 type LessonDetailParams = {
@@ -50,7 +50,7 @@ export default function LessonDetailScreen() {
     const fetchLessonDetail = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/api/attendance/lesson/${lessonId}`);
+            const response = await apiJson.get(`/api/attendance/lesson/${lessonId}`);
             console.log("Lesson detail data:", response.data);
             if (response && response.data) {
                 // Chuyển đổi dữ liệu API thành định dạng chuẩn hóa
@@ -74,7 +74,7 @@ export default function LessonDetailScreen() {
             setUpdatingAttendance(true);
             
             // Gọi API cập nhật trạng thái điểm danh
-            await api.post(`/api/attendance`, {
+            await apiJson.post(`/api/attendance`, {
                 studentId,
                 lessonId: lessonId,
                 status: newStatus

@@ -23,6 +23,39 @@ export interface IUserAsyncStorage {
   expiresAt: string;
 }
 
+export interface IAssignment {
+  id: string;
+  title: string;
+  description: string;
+  deadLine: string;
+  createBy: string;
+  filesName: Array<string>;
+  className: string;
+  classId: string;
+}
+
+export interface IAssignmentCreation {
+  title: string;
+  description: string;
+  classId: string;
+  deadLine: string;
+  files: Array<IFileUpload>;
+}
+
+export interface IFileUpload {
+  uri: string;
+  name: string;
+  size: number | undefined;
+  type: string | undefined;
+}
+
+export interface IStudentSubmission {
+  id: string;
+  submissionTime: string;
+  filesName: Array<string>;
+  score?: number;
+}
+
 ////////////////
 export type RootStackParamList = {
   Start: undefined;
@@ -39,7 +72,7 @@ export interface IActivity {
   group: string;
 }
 
-export interface IAssignment {
+export interface IDemooAssignment {
   id: string;
   title: string;
   content: string;

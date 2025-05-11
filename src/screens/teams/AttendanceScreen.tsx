@@ -1,4 +1,4 @@
-import api from "@/src/api/axios";
+import { apiJson } from "@/src/api/axios";
 import Attendance from "@/src/components/teams/Attendance";
 import Lesson from "@/src/components/teams/Lesson";
 import { AuthContext } from "@/src/context/authContext";
@@ -37,7 +37,7 @@ export default function AttendanceScreen() {
     const fetchAttendanceData = async () => {
         try {
             if (state.info.role === "STUDENT") {
-                const response = await api.get(`/api/attendance/student/${state.info.id}/${team.id}`);
+                const response = await apiJson.get(`/api/attendance/student/${state.info.id}/${team.id}`);
                 // console.log("Attendance data:", response.data);
                 if (response && response.data) {
                     // console.log("Attendance data:", response.data);
@@ -55,7 +55,7 @@ export default function AttendanceScreen() {
                     setData(attendanceRecords);
                 }
             } else if (state.info.role === "TEACHER") {
-                const response = await api.get(`/api/lesson/${team.id}`);
+                const response = await apiJson.get(`/api/lesson/${team.id}`);
                 // console.log("Lesson data:", response.data);
 
                 if (response && response.data) {

@@ -16,7 +16,7 @@ import {
     Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import api from "@/src/api/axios";
+import { apiJson } from "@/src/api/axios";
 import { GeneralScreenRouteProp } from "@/src/navigation/type";
 import { useRoute } from "@react-navigation/native";
 import { AuthContext } from "@/src/context/authContext";
@@ -35,7 +35,7 @@ export default function PostScreen() {
     const fetchPosts = async () => {
         try {
             setRefreshing(true);
-            const response = await api.get(`/api/posts/class/${team.id}`);
+            const response = await apiJson.get(`/api/posts/class/${team.id}`);
             console.log("Post class data:", response.data);
 
             setPosts(response.data.map((post: any) => ({
@@ -63,7 +63,7 @@ export default function PostScreen() {
         if (postTitle.trim() && postContent.trim()) {
             try {
                 setRefreshing(true);
-                await api.post("/api/posts", {
+                await apiJson.post("/api/posts", {
                     classId: team.id,
                     title: postTitle,
                     content: postContent,
@@ -88,9 +88,9 @@ export default function PostScreen() {
     const handleDeletePost = async (postId: string) => {
         try {
             setRefreshing(true);
-            await api.delete(`/api/posts/${postId}`);
+            await apiJson.delete(`/api/posts/${postId}`);
             
-            const response = await api.get(`/api/posts/class/${team.id}`);
+            const response = await apiJson.get(`/api/posts/class/${team.id}`);
             console.log("Post class data:", response.data);
 
             setPosts(response.data.map((post: any) => ({

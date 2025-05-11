@@ -17,7 +17,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { FlatList } from 'react-native-gesture-handler';
-import api from '@/src/api/axios';
+import { apiJson } from '@/src/api/axios';
 import { AuthContext } from '@/src/context/authContext';
 
 type ChatScreenNavigationProp = StackNavigationProp<
@@ -49,12 +49,12 @@ export default function ChatScreen() {
   const fetchData = async () => {
     try {
       // Fetch user data from the API using the username from the context
-      const response = await api.get(`/user/${state.info.username}`);
+      const response = await apiJson.get(`/user/${state.info.username}`);
       console.log('ChatScreen state:', state.info.username);
       console.log('ChatScreen response:', response.data.result);
 
       const newChats = await Promise.all(response.data.result.map(async (item: any) => {
-        const lastMessage = await api.get(`/api/lastmessage`, {
+        const lastMessage = await apiJson.get(`/api/lastmessage`, {
           params: {
             user1: state.info.username,
             user2: item.username,
@@ -93,7 +93,7 @@ export default function ChatScreen() {
       setSearchResult(null);
       
       // Gọi API tìm kiếm người dùng
-      const response = await api.get(`/api/user/search/${searchUsername.trim()}`);
+      const response = await apiJson.get(`/api/user/search/${searchUsername.trim()}`);
       console.log('Search response:', response.data);
       if (response.data && response.data.result) {
         // Kiểm tra nếu người dùng tìm kiếm chính là mình
@@ -142,7 +142,7 @@ export default function ChatScreen() {
       };
 
       // Gửi tin nhắn đầu tiên thông qua API
-      await api.post('/api/chat/send', newChat);
+      await apiJson.post('/api/chat/send', newChat);
 
       // Đóng modal tìm kiếm
       setSearchModalVisible(false);

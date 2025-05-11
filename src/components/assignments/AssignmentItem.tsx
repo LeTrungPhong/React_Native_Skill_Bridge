@@ -1,9 +1,9 @@
-import { IAssignment } from '@/src/types';
+import { IDemooAssignment } from '@/src/types';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 
 interface AssignmentItemProps {
-  assignment: IAssignment;
+  assignment: IDemooAssignment;
   onPress?: () => void;
 }
 

@@ -1,3 +1,4 @@
+import { formatShortTime } from '@/src/services';
 import { IAssignment } from '@/src/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -8,19 +9,10 @@ interface TeamAssignmentItemProps {
   onPress?: () => void;
 }
 
-function formatShortTime(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
-
-  return `${hour}:${minute}, ${day} Th${month}`;
-}
-
 const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) => {
-  const timestamp = assignment.timestamp && formatShortTime(assignment.timestamp);
-  const displayDeadline = formatShortTime(assignment.deadline);
+  // const timestamp = assignment.timestamp && formatShortTime(assignment.timestamp);
+  // console.log(assignment.deadLine)
+  const displayDeadline = `Due at ${formatShortTime(assignment.deadLine)}`;
   
   return (
     <View style={styles.assignmentItem}>
@@ -30,7 +22,7 @@ const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) =>
             <MaterialIcons name='assignment' size={28} color='#5E5CFF' />
             <View style={styles.info_text}>
               <Text style={styles.asg}>Assignments</Text>
-              <Text style={styles.timestamp}>{timestamp}</Text>
+              {/* <Text style={styles.timestamp}>{timestamp}</Text> */}
             </View>
           </View>
           <TouchableOpacity style={styles.menuButton}>
