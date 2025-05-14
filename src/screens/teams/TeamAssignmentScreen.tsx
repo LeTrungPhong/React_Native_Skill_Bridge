@@ -91,6 +91,21 @@ const TeamAssignmentScreen = () => {
     }
   };
 
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    try {
+      console.log('delete assignment', `/api/assignment/${team.id}/${assignmentId}`);
+      await apiJson.delete(`/api/assignment/${team.id}/${assignmentId}`);
+      fetchAssignments();
+    } catch (error: any) {
+      console.error('Error deleting assignment:', {
+        message: error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      Alert.alert('Error', 'Failed to delete assignment. Please try again.');
+    }
+  };
+
   // Render assignment item
   const renderAssignmentItem = ({ item }: { item: IAssignment }) => (
     <TeamAssignmentItem
@@ -99,6 +114,8 @@ const TeamAssignmentScreen = () => {
         console.log(`Selected assignment: ${item.id}`);
         navigation.navigate('AssignmentDetailScreen', { assignment: item });
       }}
+      onDelete={(assignmentId: string) => handleDeleteAssignment(assignmentId)}
+      isTeacher={state.info.role === 'TEACHER'}
     />
   );
 

@@ -76,7 +76,7 @@ const AssignmentDetailScreen = () => {
         ) : (
           <AssignmentCard
             assignment={assignment}
-            onSubmit={() => {}}
+            // onSubmit={() => {}}
           />
           // <Text>Oke student</Text>
         )}
