@@ -1,18 +1,63 @@
-import { formatShortTime } from '@/src/services';
+import { formatShortTime } from '@/src/services/time.service';
 import { IAssignment } from '@/src/types';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, Modal, Dimensions, findNodeHandle } from 'react-native';
+import { UIManager } from 'react-native';
 
 interface TeamAssignmentItemProps {
   assignment: IAssignment;
   onPress?: () => void;
+  onDelete?: (assignmentId: string) => void;
+  isTeacher?: boolean;
 }
 
-const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) => {
+const TeamAssignmentItem = ({ assignment, onPress, onDelete, isTeacher }: TeamAssignmentItemProps) => {
   // const timestamp = assignment.timestamp && formatShortTime(assignment.timestamp);
-  // console.log(assignment.deadLine)
   const displayDeadline = `Due at ${formatShortTime(assignment.deadLine)}`;
+
+  const [menuVisible, setMenuVisible] = useState(false);
+  const menuButtonRef = useRef(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Assignment",
+      "Are you sure you want to delete this assignment?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => setMenuVisible(false)
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            if (onDelete) {
+              onDelete(assignment.id);
+            }
+            setMenuVisible(false);
+          }
+        }
+      ]
+    );
+  };
+
+  const showMenu = () => {
+    if (menuButtonRef.current) {
+      const handle = findNodeHandle(menuButtonRef.current);
+      if (handle) {
+        UIManager.measure(handle, (x, y, width, height, pageX, pageY) => {
+          setMenuPosition({
+            top: pageY + height - 30,
+            right: Dimensions.get('window').width - (pageX + width)
+          });
+          setMenuVisible(true);
+        });
+      }
+    }
+  };
   
   return (
     <View style={styles.assignmentItem}>
@@ -25,9 +70,16 @@ const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) =>
               {/* <Text style={styles.timestamp}>{timestamp}</Text> */}
             </View>
           </View>
-          <TouchableOpacity style={styles.menuButton}>
-            <MaterialIcons name='more-vert' size={24} color='#000' />
-          </TouchableOpacity>
+          
+          {isTeacher && (
+            <TouchableOpacity 
+              style={styles.menuButton}
+              onPress={showMenu}
+              ref={menuButtonRef}
+            >
+              <MaterialIcons name='more-vert' size={24} color='#000' />
+            </TouchableOpacity>
+          )}
         </View>
         
         <View style={styles.contentBox}>
@@ -38,6 +90,36 @@ const TeamAssignmentItem = ({ assignment, onPress }: TeamAssignmentItemProps) =>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Menu Popup */}
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={[
+            styles.menuPopup,
+            {
+              top: menuPosition.top,
+              right: menuPosition.right,
+            }
+          ]}>
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={handleDelete}
+            >
+              <MaterialIcons name="delete" size={20} color="#FF5252" />
+              <Text style={styles.menuItemTextDelete}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -113,8 +195,38 @@ const styles = StyleSheet.create({
   viewButtonText: {
     color: '#5E5CFF',
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuPopup: {
+    position: 'absolute',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    paddingVertical: 8,
+    width: 150,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  menuItemTextDelete: {
+    marginLeft: 12,
+    fontSize: 15,
+    color: '#FF5252',
+    fontWeight: '500',
   }
 });
-
 
 export default TeamAssignmentItem;

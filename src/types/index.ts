@@ -53,7 +53,8 @@ export interface IStudentSubmission {
   id: string;
   submissionTime: string;
   filesName: Array<string>;
-  score?: number;
+  score?: number; //thêm demo
+  feedback?: string; //thêm demo
 }
 
 ////////////////
