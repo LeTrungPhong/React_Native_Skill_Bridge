@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { IAssignment, IFileUpload, IStudentSubmission } from '@/src/types';
-import { AuthContext } from '@/src/context/authContext';
 import { apiForm, apiJson } from '@/src/api/axios';
 import { Ionicons } from '@expo/vector-icons';
 import { formatShortTime } from '@/src/services/time.service';
@@ -12,7 +11,6 @@ interface AssignmentCardProps {
 }
 
 const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
-  const [state] = useContext(AuthContext);
   const [submission, setSubmission] = useState<IStudentSubmission | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 

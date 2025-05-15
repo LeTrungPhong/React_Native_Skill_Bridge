@@ -1,10 +1,15 @@
-import { IDemooAssignment } from '@/src/types';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { AuthContext } from '@/src/context/authContext';
+import { formatShortTime } from '@/src/services/time.service';
+import { IAssignment, IStudentSubmission } from '@/src/types';
+import { MaterialIcons } from '@expo/vector-icons';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, findNodeHandle, UIManager, Dimensions, Modal } from 'react-native';
 
 interface AssignmentItemProps {
-  assignment: IDemooAssignment;
+  assignment: IAssignment;
   onPress?: () => void;
+  submission?: IStudentSubmission;
+  isTeacher?: boolean;
 }
 
 const COLORS = [
@@ -33,40 +38,42 @@ function truncateText(text: string, maxLength: number): string {
   return text.substring(0, maxLength) + '...';
 }
 
-function formatShortTime(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
-
-  return `${hour}:${minute}, ${day} Th${month}`;
-}
-
-const AssignmentItem = ({ assignment, onPress }: AssignmentItemProps) => {
+const AssignmentItem = ({ assignment, onPress, submission, isTeacher }: AssignmentItemProps) => {
   const avatarColor = getRandomColor();
   const initial = assignment.title.charAt(0).toUpperCase();
-  const displayContent = truncateText(assignment.content, 35);
+  const displayContent = truncateText(assignment.title, 35);
 
   const [overdue, setOverdue] = useState(false);
   const [displayTime, setDisplayTime] = useState('');
-  
-  useEffect(() => {
-    const submittedAt = assignment.submittedAt;    
-    if(submittedAt){
-      setDisplayTime(`Submitted at ${formatShortTime(submittedAt)}`);
-      setOverdue(false);
-      return;
-    }
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const deadline = assignment.deadline;
-    const isOverdue = new Date(deadline) < new Date();
-    if(isOverdue){
-      setDisplayTime(`Overdue at ${formatShortTime(deadline)}`);
-      setOverdue(true);
+  useEffect(() => {
+    if(isTeacher){
+      setDisplayTime(`Due at ${formatShortTime(assignment.deadLine)}`);
+      if(new Date(assignment.deadLine) > new Date()){
+        setOverdue(true);
+        setDisplayTime(`Overdue at ${formatShortTime(assignment.deadLine)}`);
+      }
     }else{
-      setDisplayTime(`Due at ${formatShortTime(deadline)}`);
-      setOverdue(false);
+      const submittedAt = submission?.submissionTime;
+      const deadline = assignment.deadLine;    
+
+      console.log('AssignmentItem - submittedAt:', submission);
+      if(submittedAt){
+        setDisplayTime(`Submitted at ${formatShortTime(submittedAt)}`);
+        setOverdue(false);
+        setIsSubmitted(true);
+        return;
+      }
+
+      const isOverdue = new Date(deadline) < new Date();
+      if(isOverdue && !submission){
+        setDisplayTime(`Overdue at ${formatShortTime(assignment.deadLine)}`);
+        setOverdue(true);
+      }else{
+        setDisplayTime(`Due at ${formatShortTime(assignment.deadLine)}`);
+        setOverdue(false);
+      }
     }
   }, [assignment]);  
 
@@ -81,9 +88,9 @@ const AssignmentItem = ({ assignment, onPress }: AssignmentItemProps) => {
           <Text style={styles.title}>{displayContent}</Text>
         </View>
 
-        <Text style={ [styles.timestamp, overdue && styles.overdue] }>{displayTime}</Text>
+        <Text style={ [styles.timestamp, overdue ? styles.overdue : (isSubmitted ? styles.submitted : '')] }>{displayTime}</Text>
         
-        <Text style={styles.groupInfo}>{assignment.group}</Text>
+        <Text style={styles.groupInfo}>{assignment.className}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -136,10 +143,13 @@ const styles = StyleSheet.create({
   overdue: {
     color: 'red',
   },
+  submitted: {
+    color: '#45a679',
+  },
   groupInfo: {
     fontSize: 12,
     color: '#888',
-  }
+  },
 });
 
 export default AssignmentItem;
