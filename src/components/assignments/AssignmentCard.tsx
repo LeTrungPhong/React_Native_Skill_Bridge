@@ -342,6 +342,7 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
           <View style={styles.pointSection}>
             <Text style={styles.pointLabel}>Points</Text>
             <Text style={styles.pointValue}>{point}</Text>
+            <Text style={styles.pointValue}>{submission?.feedback}</Text>
           </View>
         </View>
       </View>
