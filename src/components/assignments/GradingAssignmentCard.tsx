@@ -1,5 +1,5 @@
 import { apiJson } from '@/src/api/axios';
-import { formatShortTime, truncateText } from '@/src/ultis/string-date.ultis';
+import { formatShortTime, truncateText } from '@/src/utils/string-date.utils';
 import { IAssignment, IStudentSubmission } from '@/src/types';
 import React, { useState, useEffect } from 'react';
 import {

@@ -1,4 +1,4 @@
-import { formatShortTime, truncateText } from '@/src/ultis/string-date.ultis';
+import { formatShortTime, truncateText } from '@/src/utils/string-date.utils';
 import { IAssignment, IStudentSubmission } from '@/src/types';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
