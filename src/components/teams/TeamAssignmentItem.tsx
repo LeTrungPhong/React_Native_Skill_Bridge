@@ -1,4 +1,4 @@
-import { formatShortTime } from '@/src/services/time.service';
+import { formatShortTime } from '@/src/ultis/string-date.ultis';
 import { IAssignment } from '@/src/types';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState, useRef } from 'react';

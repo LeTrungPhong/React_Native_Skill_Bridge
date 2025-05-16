@@ -14,4 +14,11 @@ export const formatShortTime = (dateString: string): string => {
   const minute = date.getMinutes().toString().padStart(2, '0');
 
   return `${hour}:${minute}, ${day}/${month}/${year}`;
-}
+};
+
+export const truncateText = (text: string, maxLength: number): string => {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.substring(0, maxLength) + '...';
+};

@@ -1,9 +1,7 @@
-import { AuthContext } from '@/src/context/authContext';
-import { formatShortTime } from '@/src/services/time.service';
+import { formatShortTime, truncateText } from '@/src/ultis/string-date.ultis';
 import { IAssignment, IStudentSubmission } from '@/src/types';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, findNodeHandle, UIManager, Dimensions, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 
 interface AssignmentItemProps {
   assignment: IAssignment;
@@ -30,13 +28,6 @@ const getRandomColor = (): string => {
   const randomIndex = Math.floor(Math.random() * COLORS.length);
   return COLORS[randomIndex];
 };
-
-function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) {
-    return text;
-  }
-  return text.substring(0, maxLength) + '...';
-}
 
 const AssignmentItem = ({ assignment, onPress, submission, isTeacher }: AssignmentItemProps) => {
   const avatarColor = getRandomColor();

@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { IAssignment, IFileUpload, IStudentSubmission } from '@/src/types';
 import { apiForm, apiJson } from '@/src/api/axios';
 import { Ionicons } from '@expo/vector-icons';
-import { formatShortTime } from '@/src/services/time.service';
+import { formatShortTime } from '@/src/ultis/string-date.ultis';
 import * as DocumentPicker from 'expo-document-picker';
 
 interface AssignmentCardProps {
@@ -37,7 +37,9 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
           id: submissionData.id,
           submissionTime: submissionData.submissionTime,
           filesName: submissionData.filesNames || [],
-          score: submissionData.score
+          submissionBy: submissionData.submissionBy,
+          score: submissionData.score,
+          feedback: submissionData.feedback,
         });
       } else {
         setSubmission(null);
@@ -315,18 +317,6 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
               )}
               
               {formErrors ? <Text style={styles.errorText}>{formErrors}</Text> : null}
-              
-              {/* {formData.length > 0 && !isSubmitted && (
-                <TouchableOpacity 
-                  style={[styles.submitButton, isLoading && styles.disabledButton]} 
-                  onPress={handleSubmit}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.submitButtonText}>
-                    {isLoading ? 'Processing...' : submitBtnText}
-                  </Text>
-                </TouchableOpacity>
-              )} */}
             </View>
           )}
         </View>
