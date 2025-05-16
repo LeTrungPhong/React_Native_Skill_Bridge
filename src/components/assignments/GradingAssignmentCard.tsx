@@ -1,7 +1,7 @@
 import { apiJson } from '@/src/api/axios';
 import { formatShortTime, truncateText } from '@/src/utils/string-date.utils';
 import { IAssignment, IStudentSubmission } from '@/src/types';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
   View,
@@ -16,6 +16,8 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { downloadFile } from '@/src/utils/download.utils';
+import { AuthContext } from '@/src/context/authContext';
 
 interface AssignmentCardProps {
   assignment: IAssignment;
@@ -29,6 +31,7 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
   const [tempScores, setTempScores] = useState<{[key: string]: string}>({});
   const [tempFeedbacks, setTempFeedbacks] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [state] = useContext(AuthContext);
 
   const fetchStudentSubmissions = async () => {
     setIsLoading(true);
@@ -108,25 +111,40 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
   };
 
   // Handle file downloads
-  const handleFileDownload = async (filename: string, isTeacherFile = false) => {
+  const handleFileDownload = async (filename: string, isTeacherFile: boolean, submissionId?: string) => {
     try {
       setIsLoading(true);
-      // const endpoint = isTeacherFile 
-      //   ? `/api/assignment/${assignment.classId}/${assignment.id}/teacher/${filename}`
-      //   : `/api/assignment/${assignment.classId}/${assignment.id}/student/${filename}`;
-        
-      // const res = await apiJson.get(endpoint);
+
+      let url: string;
+      if(isTeacherFile){
+        url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/assignment/${assignment.classId}/${assignment.id}/${filename}`;
+      }else{
+        url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/assignment/${assignment.classId}/${assignment.id}/${submissionId}/mySubmit/${filename} `;
+      }
       
-      // if (!res?.data) {
-      //   throw new Error('Failed to download file');
-      // }
+      await downloadFile({
+        apiBaseUrl: url,
+        fileName: filename,
+        authHeader: state.token,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${progress}%`);
+        },
+        onSuccess: (uri) => {
+          console.log('File downloaded successfully to:', uri);
+        },
+        onError: (error) => {
+          console.error('Download error:', error);
+          Alert.alert('Error', 'Failed to download file. Please try again.');
+        }
+      });
       
-      // Handle file download here
-      Alert.alert('Success', 'File downloaded successfully');
-      
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      Alert.alert('Error', 'Failed to download file. Please try again.');
+    } catch (error: any) {
+      console.error('Error downloading file of teacher:', {
+        message: error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      Alert.alert('Error', 'Failed to download file of teacher. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +246,7 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
                     selectedSubmission.filesName.map((file, index) => (
                       <TouchableOpacity 
                         key={index} 
-                        onPress={() => handleFileDownload(file, true)} 
+                        onPress={() => handleFileDownload(file, false, selectedSubmission.id)} 
                         style={styles.filesContainer}
                         disabled={isLoading}
                       >
