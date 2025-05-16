@@ -74,7 +74,7 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
 
       setPoint(
         submission.point !== null
-          ? `${submission.point} / 100 points`
+          ? `${submission.point}/100 points`
           : '10 points possible'
       );
       return;
@@ -339,11 +339,16 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
         </View>
         
         <View style={styles.assignmentFooter}>
-          <View style={styles.pointSection}>
+          <View style={styles.assignmentPoint}>
             <Text style={styles.pointLabel}>Points</Text>
             <Text style={styles.pointValue}>{point}</Text>
+          </View>
+          {submission?.feedback && (
+            <View style={styles.assignmentPoint}>
+            <Text style={styles.pointLabel}>Feedback</Text>
             <Text style={styles.pointValue}>{submission?.feedback}</Text>
           </View>
+        )}
         </View>
       </View>
     </View>
@@ -480,8 +485,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
-  pointSection: {
+  assignmentPoint: {
     flexDirection: 'column',
+    marginBottom: 8,
   },
   pointLabel: {
     marginBottom: 4,
@@ -490,9 +496,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   pointValue: {
-    color: '#5f6368',
     fontSize: 14,
-    fontWeight: '500',
   },
   errorText: {
     color: '#ff6b6b',

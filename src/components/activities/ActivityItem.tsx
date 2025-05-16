@@ -4,7 +4,6 @@ import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 
 interface ActivityItemProps {
   activity: IActivity;
-  onPress?: () => void;
 }
 
 const COLORS = [
@@ -40,7 +39,7 @@ function formatShortDate(dateString: string): string {
   return `${day} Th${month}`;
 }
 
-const ActivityItem = ({ activity, onPress }: ActivityItemProps) => {
+const ActivityItem = ({ activity }: ActivityItemProps) => {
   const avatarColor = getRandomColor();
   const initial = activity.title.charAt(0).toUpperCase();
   
@@ -48,7 +47,7 @@ const ActivityItem = ({ activity, onPress }: ActivityItemProps) => {
   const formattedDate = formatShortDate(activity.timestamp);
 
   return (
-    <TouchableOpacity style={styles.activityItem} onPress={onPress}>
+    <TouchableOpacity style={styles.activityItem}>
       <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
         <Text style={styles.avatarText}>{initial}</Text>
       </View>
