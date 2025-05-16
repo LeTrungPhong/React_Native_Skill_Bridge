@@ -54,8 +54,13 @@ export interface IStudentSubmission {
   submissionTime: string;
   filesName: Array<string>;
   submissionBy: string;
-  score?: number; //thêm demo
+  point: number; 
   feedback?: string; //thêm demo
+}
+
+export interface IStudentGrading {
+  point: number; 
+  feedback?: string; 
 }
 
 ////////////////

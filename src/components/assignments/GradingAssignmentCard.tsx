@@ -1,6 +1,6 @@
 import { apiJson } from '@/src/api/axios';
 import { formatShortTime, truncateText } from '@/src/utils/string-date.utils';
-import { IAssignment, IStudentSubmission } from '@/src/types';
+import { IAssignment, IStudentGrading, IStudentSubmission } from '@/src/types';
 import React, { useState, useEffect, useContext } from 'react';
 import {
   StyleSheet,
@@ -24,14 +24,15 @@ interface AssignmentCardProps {
 }
 
 const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
+  const [state] = useContext(AuthContext);
   const [submissions, setSubmissions] = useState<IStudentSubmission[]>([]);
   const [editingSubmission, setEditingSubmission] = useState<string | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<IStudentSubmission | null>(null);
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [tempScores, setTempScores] = useState<{[key: string]: string}>({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [tempPoints, setTempPoints] = useState<{[key: string]: string}>({});
   const [tempFeedbacks, setTempFeedbacks] = useState<{[key: string]: string}>({});
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [state] = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+  const [scoreError, setScoreError] = useState('');
 
   const fetchStudentSubmissions = async () => {
     setIsLoading(true);
@@ -46,22 +47,22 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
             submissionTime: submission.submissionTime,
             filesName: submission.filesNames,
             submissionBy: submission.submissionBy,
-            score: submission.score || undefined,
+            point: submission.point || undefined,
             feedback: submission.feedback || undefined,
           }
         });
         
         setSubmissions(result);
-        // Initialize temp scores and feedbacks with fetched data
-        const initialScores: {[key: string]: string} = {};
+        
+        const initialPoints: {[key: string]: string} = {};
         const initialFeedbacks: {[key: string]: string} = {};
         
         data.forEach((submission: IStudentSubmission) => {
-          initialScores[submission.id] = submission.score !== undefined ? submission.score.toString() : '';
+          initialPoints[submission.id] = submission.point.toString();
           initialFeedbacks[submission.id] = submission.feedback || '';
         });
         
-        setTempScores(initialScores);
+        setTempPoints(initialPoints);
         setTempFeedbacks(initialFeedbacks);
       }
     } catch(error: any) {
@@ -81,24 +82,40 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
   }, []);
 
   // Scoring
-  const handleSaveScore = (submissionId: string) => {
-    const scoreValue = parseFloat(tempScores[submissionId]);
-    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 10) {
-      Alert.alert('Error', 'Score must be a number between 0 and 10');
-      return;
-    }
+  const handleSavePoint = async(submissionId: string) => {
+    try{
+      const pointValue = parseFloat(tempPoints[submissionId]);
+      if (isNaN(pointValue) || pointValue < 0 || pointValue > 100) {
+        setScoreError('Point must be a number between 0 and 100');
+        return;
+      }
 
-    setSubmissions(prevSubmissions => 
-      prevSubmissions.map(sub => 
-        sub.id === submissionId 
-          ? { ...sub, score: scoreValue, feedback: tempFeedbacks[submissionId] } 
-          : sub
-      )
-    );
-    
-    setEditingSubmission(null);
-    Alert.alert('Success', 'Score saved successfully');
-  };
+      const data: IStudentGrading = {
+        point: pointValue,
+        feedback: tempFeedbacks[submissionId]
+      }
+      await apiJson.put(`/api/assignment/${assignment.classId}/${assignment.id}/submission/${submissionId}/grade`, data);
+      
+      setSubmissions(prevSubmissions => 
+        prevSubmissions.map(sub => 
+          sub.id === submissionId 
+            ? { ...sub, point: pointValue, feedback: tempFeedbacks[submissionId] } 
+            : sub
+        )
+      );
+      
+      setEditingSubmission(null);
+      setModalVisible(false);
+      Alert.alert('Success', 'Point saved successfully');
+    }catch(error: any){
+      console.error('Error saving point:', {
+        message: error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      Alert.alert('Error', 'Failed to save point. Please try again.');
+    };
+  }
 
   // Helper function for formatting date and time
   const formatDateTime = (dateString: string): string => {
@@ -154,12 +171,14 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
   const openSubmissionModal = (submission: IStudentSubmission) => {
     setSelectedSubmission(submission);
     setModalVisible(true);
+    setScoreError('');
   };
 
   // Close modal
   const closeModal = () => {
     setModalVisible(false);
     setEditingSubmission(null);
+    setScoreError('');
   };
 
   // Renderer list of submissions
@@ -184,7 +203,7 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
               <Text style={[styles.tableHeaderCell, { flex: 0.4 }]}>No.</Text>
               <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Student</Text>
               <Text style={[styles.tableHeaderCell, { flex: 1.0 }]}>Submitted</Text>
-              <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>Score</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>point</Text>
             </View>
             
             {/* Rows */}
@@ -200,7 +219,7 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
                   {formatDateTime(submission.submissionTime).split(', ')[0]}
                 </Text>
                 <Text style={[styles.tableCell, { flex: 0.5, textAlign: 'center' }]}>
-                  {submission.score !== undefined ? submission.score : '-'}
+                  {submission.point !== undefined ? submission.point : '-'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -260,20 +279,20 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
               </View>
               
               <View style={styles.gradingSection}>
-                <Text style={styles.sectionTitle}>Score:</Text>
+                <Text style={styles.sectionTitle}>Point:</Text>
                 
                 {isEditing ? (
                   <View style={styles.editingContainer}>
-                    <View style={styles.scoreInputContainer}>
+                    <View style={styles.pointInputContainer}>
                       <TextInput
-                        style={styles.scoreInput}
+                        style={styles.pointInput}
                         keyboardType='numeric'
-                        value={tempScores[selectedSubmission.id] || ''}
-                        onChangeText={(text) => setTempScores({...tempScores, [selectedSubmission.id]: text})}
-                        placeholder={'0 - 10'}
+                        value={tempPoints[selectedSubmission.id] || ''}
+                        onChangeText={(text) => setTempPoints({...tempPoints, [selectedSubmission.id]: text})}
                       />
-                      <Text style={styles.maxScore}>/10</Text>
+                      <Text style={styles.maxPoint}>/100</Text>
                     </View>
+                    {scoreError && (<Text style={styles.errorText}>{scoreError}</Text>)}
                     
                     <TextInput
                       style={styles.feedbackInput}
@@ -281,13 +300,13 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
                       numberOfLines={3}
                       value={tempFeedbacks[selectedSubmission.id] || ''}
                       onChangeText={(text) => setTempFeedbacks({...tempFeedbacks, [selectedSubmission.id]: text})}
-                      placeholder='Enter feedback...'
+                      placeholder='Enter feedback'
                     />
                     
                     <View style={styles.buttonContainer}>
                       <TouchableOpacity 
                         style={[styles.button, styles.saveButton]} 
-                        onPress={() => handleSaveScore(selectedSubmission.id)}
+                        onPress={() => handleSavePoint(selectedSubmission.id)}
                       >
                         <Text style={styles.buttonText}>Save</Text>
                       </TouchableOpacity>
@@ -301,26 +320,29 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
                     </View>
                   </View>
                 ) : (
-                  <View style={styles.displayContainer}>
-                    <View style={styles.scoreDisplay}>
-                      <Text style={styles.scoreText}>
-                        {selectedSubmission.score !== undefined ? selectedSubmission.score : '-'}
-                      </Text>
-                      <Text style={styles.maxScore}>/10</Text>
+                  <View>
+                    <View style={styles.displayContainer}>
+                      <View style={styles.pointDisplay}>
+                        <Text style={styles.pointText}>
+                          {selectedSubmission.point !== undefined ? selectedSubmission.point : '-'}
+                        </Text>
+                        <Text style={styles.maxPoint}>/100</Text>
+                      </View>
+                      
+                      {selectedSubmission.feedback ? (
+                        <Text style={styles.feedbackText}>{selectedSubmission.feedback}</Text>
+                      ) : (
+                        <Text style={styles.noFeedbackText}>No feedback yet</Text>
+                      )}
                     </View>
                     
-                    {selectedSubmission.feedback ? (
-                      <Text style={styles.feedbackText}>{selectedSubmission.feedback}</Text>
-                    ) : (
-                      <Text style={styles.noFeedbackText}>No feedback yet</Text>
-                    )}
                     
                     <TouchableOpacity 
                       style={[styles.button, styles.editButton]} 
                       onPress={() => setEditingSubmission(selectedSubmission.id)}
                     >
                       <Text style={styles.buttonText}>
-                        {selectedSubmission.score !== undefined ? 'Edit score' : 'Grade submission'}
+                        Edit point
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -579,7 +601,7 @@ const styles = StyleSheet.create({
   
   // Styles for attachments section
   attachmentsContainer: {
-    marginBottom: 16,
+    marginBottom: 8,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -639,24 +661,23 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: 'white',
   },
-  scoreInputContainer: {
+  pointInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
   },
-  scoreInput: {
+  pointInput: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 4,
-    padding: 10,
-    width: 80,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    width: 60,
     textAlign: 'center',
     fontSize: 16,
   },
-  maxScore: {
+  maxPoint: {
     marginLeft: 4,
     fontSize: 16,
-    color: '#5f6368',
   },
   feedbackInput: {
     borderWidth: 1,
@@ -664,6 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 10,
     marginBottom: 16,
+    marginTop: 16,
     minHeight: 80,
     textAlignVertical: 'top',
   },
@@ -700,23 +722,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   
-  // Styles for displaying score and feedback
+  // Styles for displaying point and feedback
   displayContainer: {
-    padding: 16,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 8,
     backgroundColor: 'white',
+    marginBottom: 16,
   },
-  scoreDisplay: {
+  pointDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  scoreText: {
+  pointText: {
     fontSize: 20,
     fontWeight: '600',
     color: '#202124',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
   },
   feedbackText: {
     color: '#5f6368',

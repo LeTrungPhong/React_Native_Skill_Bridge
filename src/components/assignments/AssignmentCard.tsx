@@ -21,7 +21,7 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitNoti, setSubmitNoti] = useState('');
   const [submitBtnText, setSubmitBtnText] = useState('Turn in');
-  const [score, setScore] = useState('No score yet');
+  const [point, setPoint] = useState('No point yet');
   
   // File upload
   const [formData, setFormData] = useState<IFileUpload[]>([]);
@@ -41,7 +41,7 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
           submissionTime: submissionData.submissionTime,
           filesName: submissionData.filesNames || [],
           submissionBy: submissionData.submissionBy,
-          score: submissionData.score,
+          point: submissionData.point,
           feedback: submissionData.feedback,
         });
       } else {
@@ -72,9 +72,9 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
       setOverdue(false);
       setSubmitBtnText('Undo turn in');
 
-      setScore(
-        submission.score !== undefined && submission.score !== null
-          ? `${submission.score} / 10 points`
+      setPoint(
+        submission.point !== null
+          ? `${submission.point} / 100 points`
           : '10 points possible'
       );
       return;
@@ -339,9 +339,10 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
         </View>
         
         <View style={styles.assignmentFooter}>
-          <View style={styles.scoreSection}>
-            <Text style={styles.scoreLabel}>Points</Text>
-            <Text style={styles.scoreValue}>{score}</Text>
+          <View style={styles.pointSection}>
+            <Text style={styles.pointLabel}>Points</Text>
+            <Text style={styles.pointValue}>{point}</Text>
+            <Text style={styles.pointValue}>{submission?.feedback}</Text>
           </View>
         </View>
       </View>
@@ -479,16 +480,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
-  scoreSection: {
+  pointSection: {
     flexDirection: 'column',
   },
-  scoreLabel: {
+  pointLabel: {
     marginBottom: 4,
     color: '#70757a',
     fontWeight: '500',
     fontSize: 14,
   },
-  scoreValue: {
+  pointValue: {
     color: '#5f6368',
     fontSize: 14,
     fontWeight: '500',

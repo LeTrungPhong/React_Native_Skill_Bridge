@@ -37,7 +37,6 @@ const TeacherAssignmentScreen = () => {
   // Get classname 
   const getClassName = async (classId: string): Promise<string> => {
     try {
-      // Check if we already have this class name cached
       if (classNames[classId]) {
         return classNames[classId];
       }
@@ -46,7 +45,6 @@ const TeacherAssignmentScreen = () => {
       if (res && res.data) {
         const className = res.data.name;
         
-        // Update our cache
         setClassNames(prev => ({
           ...prev,
           [classId]: className
@@ -74,7 +72,6 @@ const TeacherAssignmentScreen = () => {
       if (res && res.data && res.data.result) {
         const allTeacherAssignments: IAssignment[] = [];
         
-        // First create assignments with temp class names
         for (let item of res.data.result) {
           const assignment: IAssignment = {
             id: item.id,
@@ -90,10 +87,8 @@ const TeacherAssignmentScreen = () => {
           allTeacherAssignments.push(assignment);
         }
         
-        // Set assignments immediately to show content
         setAssignments(allTeacherAssignments);
         
-        // Then update class names one by one
         for (let i = 0; i < allTeacherAssignments.length; i++) {
           const item = allTeacherAssignments[i];
           const className = await getClassName(item.classId);
@@ -126,7 +121,7 @@ const TeacherAssignmentScreen = () => {
     try {
       console.log('Delete assignment:', `/api/assignment/${classId}/${assignmentId}`);
       await apiJson.delete(`/api/assignment/${classId}/${assignmentId}`);
-      // Re-fetch assignments after deletion
+      
       fetchAssignments();
     } catch (error: any) {
       console.error('Error deleting assignment:', {
