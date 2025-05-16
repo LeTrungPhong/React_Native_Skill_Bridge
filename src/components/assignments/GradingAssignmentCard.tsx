@@ -1,4 +1,6 @@
-import { IDemooAssignment } from '@/src/types';
+import { apiJson } from '@/src/api/axios';
+import { formatShortTime, truncateText } from '@/src/ultis/string-date.ultis';
+import { IAssignment, IStudentSubmission } from '@/src/types';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
@@ -10,178 +12,79 @@ import {
   Alert,
   SafeAreaView,
   Modal,
-  Dimensions
+  Dimensions,
+  ActivityIndicator
 } from 'react-native';
-
-// Định nghĩa các interface cần thiết
-interface IDemoAssignment {
-  id: string;
-  title: string;
-  content: string;
-  deadline: string;
-  totalPoints: number;
-}
-
-interface IAttachment {
-  id: string;
-  filename: string;
-  fileType: string;
-  url: string;
-}
-
-interface IStudentSubmission {
-  id: string;
-  studentId: string;
-  studentName: string;
-  submittedAt: string;
-  attachments: IAttachment[];
-  score?: number;
-  feedback?: string;
-}
-
-function formatDateTime(dateString: string): string {
-  const date = new Date(dateString);
-  const day = date.getDate();
-  const month = date.getMonth() + 1;
-  const year = date.getFullYear();
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
-
-  return `${hour}:${minute}, ${day}/${month}/${year}`;
-}
+import { Ionicons } from '@expo/vector-icons';
 
 interface AssignmentCardProps {
-  assignment: IDemooAssignment;
-  onSubmit?: (id: string) => void;
+  assignment: IAssignment;
 }
 
-const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) => {
-  // Dữ liệu giả về bài tập
-  const demoAssignment: IDemoAssignment = {
-    id: 'assignment-001',
-    title: 'BÀI TẬP TUẦN 1: GIẢI BÀI TOÁN TỐI ƯU',
-    content: 'Hãy giải các bài toán tối ưu sau và trình bày lời giải chi tiết. Bài 1: Tìm giá trị lớn nhất và nhỏ nhất của hàm số f(x) = x³ - 3x² + 2 trên đoạn [-1, 3]. Bài 2: Tìm khoảng cách ngắn nhất từ điểm M(2, 1) đến đường thẳng 2x - y + 3 = 0.',
-    deadline: '2025-05-05T23:59:00',
-    totalPoints: 10
-  };
-
-  // Dữ liệu giả về các bài nộp
-  const initialSubmissions: IStudentSubmission[] = [
-    {
-      id: 'sub-001',
-      studentId: 'st-001',
-      studentName: 'Nguyễn Văn A',
-      submittedAt: '2025-05-04T10:23:45',
-      attachments: [
-        {
-          id: 'att-001',
-          filename: 'bai_tap_tuan1_NguyenVanA.pdf',
-          fileType: 'application/pdf',
-          url: 'https://example.com/files/bai_tap_tuan1_NguyenVanA.pdf'
-        }
-      ],
-      score: 8.5,
-      feedback: 'Bài làm tốt, trình bày rõ ràng. Thiếu giải thích ở phần bài 2.'
-    },
-    {
-      id: 'sub-002',
-      studentId: 'st-002',
-      studentName: 'Trần Thị B',
-      submittedAt: '2025-05-03T15:42:10',
-      attachments: [
-        {
-          id: 'att-002',
-          filename: 'bai_tap_TranThiB.docx',
-          fileType: 'application/docx',
-          url: 'https://example.com/files/bai_tap_TranThiB.docx'
-        },
-        {
-          id: 'att-003',
-          filename: 'calculations.xlsx',
-          fileType: 'application/xlsx',
-          url: 'https://example.com/files/calculations.xlsx'
-        }
-      ],
-      score: 9,
-      feedback: 'Bài làm đầy đủ, phân tích sâu. Có thể cải thiện cách trình bày công thức.'
-    },
-    {
-      id: 'sub-003',
-      studentId: 'st-003',
-      studentName: 'Lê Minh C',
-      submittedAt: '2025-05-05T22:45:30',
-      attachments: [
-        {
-          id: 'att-004',
-          filename: 'bai_tap_LeMinhC.pdf',
-          fileType: 'application/pdf',
-          url: 'https://example.com/files/bai_tap_LeMinhC.pdf'
-        }
-      ]
-    },
-    {
-      id: 'sub-004',
-      studentId: 'st-004',
-      studentName: 'Phạm Hoàng D',
-      submittedAt: '2025-05-04T18:30:00',
-      attachments: [
-        {
-          id: 'att-005',
-          filename: 'bai_tap_PhamHoangD.pdf',
-          fileType: 'application/pdf',
-          url: 'https://example.com/files/bai_tap_PhamHoangD.pdf'
-        }
-      ],
-      score: 7,
-      feedback: 'Còn nhiều sai sót ở phần tính toán. Cần xem lại cách áp dụng công thức đạo hàm.'
-    },
-    {
-      id: 'sub-005',
-      studentId: 'st-005',
-      studentName: 'Vũ Thị E',
-      submittedAt: '2025-05-05T23:50:12',
-      attachments: []
-    }
-  ];
-  
-  // Handle submission
-  function handleSubmit() {
-    if (onSubmit) {
-      onSubmit(assignment.id);
-    }
-  };
-
-  // States cho component
-  const [submissions, setSubmissions] = useState<IStudentSubmission[]>(initialSubmissions);
+const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
+  const [submissions, setSubmissions] = useState<IStudentSubmission[]>([]);
   const [editingSubmission, setEditingSubmission] = useState<string | null>(null);
   const [selectedSubmission, setSelectedSubmission] = useState<IStudentSubmission | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [tempScores, setTempScores] = useState<{[key: string]: string}>({});
   const [tempFeedbacks, setTempFeedbacks] = useState<{[key: string]: string}>({});
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Khởi tạo giá trị mặc định cho điểm và feedback
+  const fetchStudentSubmissions = async () => {
+    setIsLoading(true);
+    try {
+      const res = await apiJson.get(`/api/assignment/${assignment.classId}/${assignment.id}/all`);
+
+      if(res && res.data) {
+        const data = res.data.result.submissionResponses || [];
+        const result: IStudentSubmission[] = data.map((submission: any) => {
+          return {
+            id: submission.id,
+            submissionTime: submission.submissionTime,
+            filesName: submission.filesNames,
+            submissionBy: submission.submissionBy,
+            score: submission.score || undefined,
+            feedback: submission.feedback || undefined,
+          }
+        });
+        
+        setSubmissions(result);
+        // Initialize temp scores and feedbacks with fetched data
+        const initialScores: {[key: string]: string} = {};
+        const initialFeedbacks: {[key: string]: string} = {};
+        
+        data.forEach((submission: IStudentSubmission) => {
+          initialScores[submission.id] = submission.score !== undefined ? submission.score.toString() : '';
+          initialFeedbacks[submission.id] = submission.feedback || '';
+        });
+        
+        setTempScores(initialScores);
+        setTempFeedbacks(initialFeedbacks);
+      }
+    } catch(error: any) {
+      console.error('Error fetching student submissions:', {
+        message: error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      Alert.alert('Error', 'Unable to load submissions list');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    const initialScores: {[key: string]: string} = {};
-    const initialFeedbacks: {[key: string]: string} = {};
-    
-    submissions.forEach(submission => {
-      initialScores[submission.id] = submission.score !== undefined ? submission.score.toString() : '';
-      initialFeedbacks[submission.id] = submission.feedback || '';
-    });
-    
-    setTempScores(initialScores);
-    setTempFeedbacks(initialFeedbacks);
+    fetchStudentSubmissions();
   }, []);
 
-  // Xử lý khi chấm điểm
+  // Scoring
   const handleSaveScore = (submissionId: string) => {
     const scoreValue = parseFloat(tempScores[submissionId]);
-    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > demoAssignment.totalPoints) {
-      Alert.alert('Lỗi', `Điểm phải là số từ 0 đến ${demoAssignment.totalPoints}`);
+    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 10) {
+      Alert.alert('Error', 'Score must be a number between 0 and 10');
       return;
     }
-    
-    // Cập nhật điểm và nhận xét
+
     setSubmissions(prevSubmissions => 
       prevSubmissions.map(sub => 
         sub.id === submissionId 
@@ -191,77 +94,105 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
     );
     
     setEditingSubmission(null);
-    Alert.alert('Thành công', 'Đã lưu điểm và nhận xét');
+    Alert.alert('Success', 'Score saved successfully');
   };
 
-  // Xử lý khi xem tệp đính kèm
-  const handleViewAttachment = (attachmentUrl: string) => {
-    Alert.alert('Mở tệp đính kèm', `Đang mở tệp: ${attachmentUrl}`);
+  // Helper function for formatting date and time
+  const formatDateTime = (dateString: string): string => {
+    if (!dateString) return '-';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '-';
+    
+    return date.toLocaleString();
   };
 
-  const renderAttachments = (attachments: IAttachment[]) => {
-    return attachments.map((attachment) => (
-      <TouchableOpacity 
-        key={attachment.id}
-        style={styles.attachmentItem}
-        onPress={() => handleViewAttachment(attachment.url)}
-      >
-        <Text style={styles.attachmentIcon}>📎</Text>
-        <Text style={styles.attachmentName}>{attachment.filename}</Text>
-      </TouchableOpacity>
-    ));
+  // Handle file downloads
+  const handleFileDownload = async (filename: string, isTeacherFile = false) => {
+    try {
+      setIsLoading(true);
+      // const endpoint = isTeacherFile 
+      //   ? `/api/assignment/${assignment.classId}/${assignment.id}/teacher/${filename}`
+      //   : `/api/assignment/${assignment.classId}/${assignment.id}/student/${filename}`;
+        
+      // const res = await apiJson.get(endpoint);
+      
+      // if (!res?.data) {
+      //   throw new Error('Failed to download file');
+      // }
+      
+      // Handle file download here
+      Alert.alert('Success', 'File downloaded successfully');
+      
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      Alert.alert('Error', 'Failed to download file. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Xử lý khi nhấn vào một sinh viên trong bảng
+  // Handle when a student is selected in the table
   const openSubmissionModal = (submission: IStudentSubmission) => {
     setSelectedSubmission(submission);
     setModalVisible(true);
   };
 
-  // Đóng modal
+  // Close modal
   const closeModal = () => {
     setModalVisible(false);
     setEditingSubmission(null);
   };
 
-  // Renderer cho bảng danh sách các bài nộp
+  // Renderer list of submissions
   const renderSubmissionList = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size='large' color='#5E5CFF' />
+          <Text style={styles.loadingText}>Loading submissions...</Text>
+        </View>
+      );
+    }
+    
     return (
       <View style={styles.submissionListContainer}>
-        {/* Header của bảng */}
-        <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderCell, { flex: 0.4 }]}>STT</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Sinh viên</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Thời gian nộp</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>Điểm</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 0.6 }]}>Tệp</Text>
-        </View>
-        
-        {/* Các dòng trong bảng */}
-        {submissions.map((submission, index) => (
-          <TouchableOpacity 
-            key={submission.id}
-            style={styles.tableRow}
-            onPress={() => openSubmissionModal(submission)}
-          >
-            <Text style={[styles.tableCell, { flex: 0.4 }]}>{index + 1}</Text>
-            <Text style={[styles.tableCell, { flex: 1.5 }]}>{submission.studentName}</Text>
-            <Text style={[styles.tableCell, { flex: 1 }]}>
-              {formatDateTime(submission.submittedAt).split(', ')[0]}
-            </Text>
-            <Text style={[styles.tableCell, { flex: 0.5 }]}>
-              {submission.score !== undefined ? submission.score : '-'}
-            </Text>
-            <Text style={[styles.tableCell, { flex: 0.6 }]}>
-              {submission.attachments.length > 0 ? `${submission.attachments.length} tệp` : 'Không có'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {!submissions || submissions.length <= 0 ? (
+          <Text style={styles.noSubmissionText}>No submissions</Text>
+        ) : (
+          <View>
+            {/* Header */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.tableHeaderCell, { flex: 0.4 }]}>No.</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Student</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 1.0 }]}>Submitted</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>Score</Text>
+            </View>
+            
+            {/* Rows */}
+            {submissions.map((submission, index) => (
+              <TouchableOpacity 
+                key={submission.id}
+                style={styles.tableRow}
+                onPress={() => openSubmissionModal(submission)}
+              >
+                <Text style={[styles.tableCell, { flex: 0.4 }]}>{index + 1}</Text>
+                <Text style={[styles.tableCell, { flex: 0.8 }]}>{truncateText(submission.submissionBy, 5)}</Text>
+                <Text style={[styles.tableCell, { flex: 1.0 }]}>
+                  {formatDateTime(submission.submissionTime).split(', ')[0]}
+                </Text>
+                <Text style={[styles.tableCell, { flex: 0.5, textAlign: 'center' }]}>
+                  {submission.score !== undefined ? submission.score : '-'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
     );
   };
 
-  // Modal chi tiết bài nộp
+  // Submission details modal
   const renderSubmissionModal = () => {
     if (!selectedSubmission) return null;
     
@@ -269,7 +200,7 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
     
     return (
       <Modal
-        animationType="slide"
+        animationType='slide'
         transparent={true}
         visible={modalVisible}
         onRequestClose={closeModal}
@@ -277,7 +208,7 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chi tiết bài nộp</Text>
+              <Text style={styles.modalTitle}>Detail submission</Text>
               <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
@@ -285,43 +216,54 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
             
             <ScrollView style={styles.modalScrollView}>
               <View style={styles.studentInfoModal}>
-                <Text style={styles.studentNameModal}>{selectedSubmission.studentName}</Text>
+                <Text style={styles.studentNameModal}>{selectedSubmission.submissionBy}</Text>
                 <Text style={styles.submissionTimeModal}>
-                  Nộp lúc: {formatDateTime(selectedSubmission.submittedAt)}
+                  Submitted at: {formatDateTime(selectedSubmission.submissionTime)}
                 </Text>
               </View>
               
               <View style={styles.attachmentsContainer}>
-                <Text style={styles.sectionTitle}>Bài làm:</Text>
-                {selectedSubmission.attachments.length > 0 ? 
-                  renderAttachments(selectedSubmission.attachments) : 
-                  <Text style={styles.noAttachment}>Không có tệp đính kèm</Text>
+                <Text style={styles.sectionTitle}>Submission:</Text>
+                {selectedSubmission.filesName && selectedSubmission.filesName.length > 0 ? (
+                    selectedSubmission.filesName.map((file, index) => (
+                      <TouchableOpacity 
+                        key={index} 
+                        onPress={() => handleFileDownload(file, true)} 
+                        style={styles.filesContainer}
+                        disabled={isLoading}
+                      >
+                        <Ionicons name='document-text-outline' size={16} color='#5E5CFF' />
+                        <Text style={styles.file}>{file}</Text>
+                      </TouchableOpacity>
+                    ))) 
+                    : 
+                    (<Text style={styles.noAttachment}>No attachments</Text>)
                 }
               </View>
               
               <View style={styles.gradingSection}>
-                <Text style={styles.sectionTitle}>Chấm điểm:</Text>
+                <Text style={styles.sectionTitle}>Score:</Text>
                 
                 {isEditing ? (
                   <View style={styles.editingContainer}>
                     <View style={styles.scoreInputContainer}>
                       <TextInput
                         style={styles.scoreInput}
-                        keyboardType="numeric"
-                        value={tempScores[selectedSubmission.id]}
+                        keyboardType='numeric'
+                        value={tempScores[selectedSubmission.id] || ''}
                         onChangeText={(text) => setTempScores({...tempScores, [selectedSubmission.id]: text})}
-                        placeholder={`0-${demoAssignment.totalPoints}`}
+                        placeholder={'0 - 10'}
                       />
-                      <Text style={styles.maxScore}>/{demoAssignment.totalPoints}</Text>
+                      <Text style={styles.maxScore}>/10</Text>
                     </View>
                     
                     <TextInput
                       style={styles.feedbackInput}
                       multiline
                       numberOfLines={3}
-                      value={tempFeedbacks[selectedSubmission.id]}
+                      value={tempFeedbacks[selectedSubmission.id] || ''}
                       onChangeText={(text) => setTempFeedbacks({...tempFeedbacks, [selectedSubmission.id]: text})}
-                      placeholder="Nhập nhận xét..."
+                      placeholder='Enter feedback...'
                     />
                     
                     <View style={styles.buttonContainer}>
@@ -329,14 +271,14 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
                         style={[styles.button, styles.saveButton]} 
                         onPress={() => handleSaveScore(selectedSubmission.id)}
                       >
-                        <Text style={styles.buttonText}>Lưu</Text>
+                        <Text style={styles.buttonText}>Save</Text>
                       </TouchableOpacity>
                       
                       <TouchableOpacity 
                         style={[styles.button, styles.cancelButton]} 
                         onPress={() => setEditingSubmission(null)}
                       >
-                        <Text style={styles.cancelButtonText}>Hủy</Text>
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -346,13 +288,13 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
                       <Text style={styles.scoreText}>
                         {selectedSubmission.score !== undefined ? selectedSubmission.score : '-'}
                       </Text>
-                      <Text style={styles.maxScore}>/{demoAssignment.totalPoints}</Text>
+                      <Text style={styles.maxScore}>/10</Text>
                     </View>
                     
                     {selectedSubmission.feedback ? (
                       <Text style={styles.feedbackText}>{selectedSubmission.feedback}</Text>
                     ) : (
-                      <Text style={styles.noFeedbackText}>Chưa có nhận xét</Text>
+                      <Text style={styles.noFeedbackText}>No feedback yet</Text>
                     )}
                     
                     <TouchableOpacity 
@@ -360,7 +302,7 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
                       onPress={() => setEditingSubmission(selectedSubmission.id)}
                     >
                       <Text style={styles.buttonText}>
-                        {selectedSubmission.score !== undefined ? 'Chỉnh sửa điểm' : 'Chấm điểm'}
+                        {selectedSubmission.score !== undefined ? 'Edit score' : 'Grade submission'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -376,29 +318,43 @@ const GradingAssignmentCard = ({ assignment, onSubmit }: AssignmentCardProps) =>
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {/* Phần hiển thị đề bài */}
+        {/* Assignment display section */}
         <View style={styles.assignmentSection}>
-          <Text style={styles.assignmentTitle}>{demoAssignment.title}</Text>
-          <Text style={styles.assignmentDeadline}>Hạn nộp: {formatDateTime(demoAssignment.deadline)}</Text>
+          <Text style={styles.assignmentTitle}>{assignment.title}</Text>
+          <Text style={styles.assignmentDeadline}>{`Due at ${formatShortTime(assignment.deadLine)}`}</Text>
           
           <View style={styles.assignmentInstructions}>
-            <Text style={styles.instructionTitle}>Nội dung đề bài</Text>
-            <Text style={styles.instructionText}>{demoAssignment.content}</Text>
-          </View>
-          
-          <View style={styles.pointsContainer}>
-            <Text style={styles.pointsText}>Điểm tối đa: {demoAssignment.totalPoints}</Text>
+            <Text style={styles.instructionTitle}>Instructions</Text>
+            <Text style={styles.instructionText}>{assignment.description}</Text>
+            
+            {Array.isArray(assignment.filesName) && assignment.filesName.length > 0 && (
+              <View style={styles.attachmentsSection}>
+                {assignment.filesName.map((file, index) => (
+                  <TouchableOpacity 
+                    key={index} 
+                    onPress={() => handleFileDownload(file, true)} 
+                    style={styles.filesContainer}
+                    disabled={isLoading}
+                  >
+                    <Ionicons name='document-text-outline' size={16} color='#5E5CFF' />
+                    <Text style={styles.file}>{file}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
         
-        {/* Phần hiển thị bảng chấm bài */}
+        {/* Grading table display section */}
         <View style={styles.gradingTableSection}>
-          <Text style={styles.gradingTableTitle}>Bảng danh sách bài nộp ({submissions.length})</Text>
+          <Text style={styles.gradingTableTitle}>
+            Submission list table ({submissions ? submissions.length : 0})
+          </Text>
           {renderSubmissionList()}
         </View>
       </ScrollView>
       
-      {/* Modal chi tiết bài nộp */}
+      {/* Submission details modal */}
       {renderSubmissionModal()}
     </SafeAreaView>
   );
@@ -409,13 +365,21 @@ const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white', 
+    borderRadius: 12, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 3.84, 
+    elevation: 3,
+    marginBottom: 16,
   },
   scrollView: {
     width: '100%',
     padding: 16,
   },
-  // Styles cho phần đề bài
+
+  // Styles for assignment section
   assignmentSection: {
     backgroundColor: 'white',
     padding: 16,
@@ -439,7 +403,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   assignmentInstructions: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   instructionTitle: {
     color: '#70757a',
@@ -464,7 +428,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   
-  // Styles cho phần bảng chấm bài
+  // Styles for grading table section
   gradingTableSection: {
     backgroundColor: 'white',
     borderRadius: 8,
@@ -473,8 +437,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
-    elevation: 3,
-    marginBottom: 16,
+    elevation: 8,
   },
   gradingTableTitle: {
     fontSize: 18,
@@ -483,12 +446,29 @@ const styles = StyleSheet.create({
     color: '#202124',
   },
   
-  // Styles cho bảng danh sách
+  // Loading styles
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#5f6368',
+  },
+  
+  // Styles for submission list
   submissionListContainer: {
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 8,
     overflow: 'hidden',
+  },
+  noSubmissionText: {
+    padding: 20,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    color: '#70757a',
   },
   tableHeader: {
     flexDirection: 'row',
@@ -515,7 +495,7 @@ const styles = StyleSheet.create({
     color: '#202124',
   },
   
-  // Styles cho Modal
+  // Styles for Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -561,7 +541,7 @@ const styles = StyleSheet.create({
     maxHeight: height * 0.7,
   },
   
-  // Styles cho thông tin sinh viên trong modal
+  // Styles for student info in modal
   studentInfoModal: {
     marginBottom: 16,
     paddingBottom: 16,
@@ -579,12 +559,28 @@ const styles = StyleSheet.create({
     color: '#5f6368',
   },
   
-  // Styles cho phần tệp đính kèm
+  // Styles for attachments section
   attachmentsContainer: {
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+  },
+  attachmentsSection: {
+    marginTop: 12,
+  },
+  filesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    padding: 8,
+    backgroundColor: '#f1f3f4',
+    borderRadius: 4,
+  },
+  file: {
+    marginLeft: 8,
+    color: '#5E5CFF',
+    fontSize: 14,
   },
   attachmentItem: {
     flexDirection: 'row',
@@ -608,7 +604,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   
-  // Styles cho phần chấm điểm
+  // Styles for grading section
   gradingSection: {
     marginTop: 8,
   },
@@ -686,7 +682,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   
-  // Styles cho hiển thị điểm và feedback
+  // Styles for displaying score and feedback
   displayContainer: {
     padding: 16,
     borderWidth: 1,

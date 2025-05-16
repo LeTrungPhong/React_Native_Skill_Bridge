@@ -53,6 +53,7 @@ export interface IStudentSubmission {
   id: string;
   submissionTime: string;
   filesName: Array<string>;
+  submissionBy: string;
   score?: number; //thêm demo
   feedback?: string; //thêm demo
 }
@@ -71,15 +72,4 @@ export interface IActivity {
   content: string;
   timestamp: string;
   group: string;
-}
-
-export interface IDemooAssignment {
-  id: string;
-  title: string;
-  content: string;
-  submittedAt?: string;
-  deadline: string;
-  timestamp?: string;
-  group: string;
-  score?: number;
 }

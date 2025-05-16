@@ -146,7 +146,6 @@ const TeacherAssignmentScreen = () => {
         console.log(`Selected assignment: ${item.id}`);
         navigation.navigate('AssignmentDetailScreen', { assignment: item });
       }}
-      onDelete={() => handleDeleteAssignment(item.classId, item.id)}
       isTeacher={state.info.role === 'TEACHER'}
     />
   );
