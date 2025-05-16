@@ -8,67 +8,17 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { IActivity } from '../../types';
 import ActivityItem from '../../components/activities/ActivityItem';
 
-// type ActivityScreenNavigationProp = StackNavigationProp<
-//   { 
-//     ActivityScreen: undefined; 
-//     ActivityDetailScreen: { activity: IActivity };
-//   }, 
-//   'ActivityScreen'
-// >;
-
-const ACTIVITIES: IActivity[] = [
-  {
-    id: '1',
-    title: 'New Assignment Posted',
-    content: 'You have a new assignment in the Math group.',
-    timestamp: '2025-04-20T08:30:00Z',
-    group: 'Math Group',
-  },
-  {
-    id: '2',
-    title: 'Team Meeting Reminder',
-    content: 'Your weekly team meeting starts in 30 minutes.',
-    timestamp: '2025-04-20T07:00:00Z',
-    group: 'Project Team A',
-  },
-  {
-    id: '3',
-    title: 'System Update',
-    content: 'Skill Bridge app was updated to version 2.1.',
-    timestamp: '2025-04-19T21:15:00Z',
-    group: 'Project Team A',
-  },
-  {
-    id: '4',
-    title: 'New Message',
-    content: 'Anna sent you a message in the Chat.',
-    timestamp: '2025-04-19T18:45:00Z',
-    group: 'Chat',
-  },
-  {
-    id: '5',
-    title: 'Submission Deadline',
-    content: 'Your assignment is due in 2 hours!',
-    timestamp: '2025-04-19T15:00:00Z',
-    group: 'English Group',
-  },
-];
 
 const ActivityScreen = () => {
   const colorScheme = useColorScheme();
-  const [activities] = useState<IActivity[]>(ACTIVITIES);
+  const [activities] = useState<IActivity[]>();
 
   const renderActivityItem = ({ item }: { item: IActivity }) => (
     <ActivityItem 
-      activity={item} 
-      onPress={() => {
-        console.log(`Selected activity: ${item.id}`);
-      }}
+      activity={item}
     />
   );
 

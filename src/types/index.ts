@@ -60,16 +60,8 @@ export interface IStudentSubmission {
 
 export interface IStudentGrading {
   point: number; 
-  feedback?: string; 
+  feedback: string; 
 }
-
-////////////////
-export type RootStackParamList = {
-  Start: undefined;
-  SignIn: undefined;
-  SignUp: undefined;
-  Home: undefined;
-};
 
 export interface IActivity {
   id: string;
@@ -78,3 +70,10 @@ export interface IActivity {
   timestamp: string;
   group: string;
 }
+
+export type RootStackParamList = {
+  Start: undefined;
+  SignIn: undefined;
+  SignUp: undefined;
+  Home: undefined;
+};

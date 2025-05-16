@@ -203,7 +203,7 @@ const GradingAssignmentCard = ({ assignment }: AssignmentCardProps) => {
               <Text style={[styles.tableHeaderCell, { flex: 0.4 }]}>No.</Text>
               <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Student</Text>
               <Text style={[styles.tableHeaderCell, { flex: 1.0 }]}>Submitted</Text>
-              <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>point</Text>
+              <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>Point</Text>
             </View>
             
             {/* Rows */}
