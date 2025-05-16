@@ -13,13 +13,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { IActivity } from '../../types';
 import ActivityItem from '../../components/activities/ActivityItem';
 
-type ActivityScreenNavigationProp = StackNavigationProp<
-  { 
-    ActivityScreen: undefined; 
-    ActivityDetailScreen: { activity: IActivity };
-  }, 
-  'ActivityScreen'
->;
+// type ActivityScreenNavigationProp = StackNavigationProp<
+//   { 
+//     ActivityScreen: undefined; 
+//     ActivityDetailScreen: { activity: IActivity };
+//   }, 
+//   'ActivityScreen'
+// >;
 
 const ACTIVITIES: IActivity[] = [
   {
@@ -62,14 +62,12 @@ const ACTIVITIES: IActivity[] = [
 const ActivityScreen = () => {
   const colorScheme = useColorScheme();
   const [activities] = useState<IActivity[]>(ACTIVITIES);
-  const navigation = useNavigation<ActivityScreenNavigationProp>();
 
   const renderActivityItem = ({ item }: { item: IActivity }) => (
     <ActivityItem 
       activity={item} 
       onPress={() => {
         console.log(`Selected activity: ${item.id}`);
-        navigation.navigate('ActivityDetailScreen', { activity: item });
       }}
     />
   );

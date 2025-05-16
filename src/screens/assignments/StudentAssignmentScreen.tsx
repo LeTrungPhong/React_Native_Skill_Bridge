@@ -15,7 +15,6 @@ import OverdueScreen from './OverdueScreen';
 import CompletedScreen from './CompletedScreen';
 import { createStackNavigator } from '@react-navigation/stack';
 import AssignmentDetailScreen from './AssignmentDetailScreen';
-import { AuthContext } from '@/src/context/authContext';
 import { apiJson } from '@/src/api/axios';
 import { IAssignment, IStudentSubmission } from '@/src/types';
 
@@ -63,7 +62,8 @@ const AssignmentTabs = () => {
           id: submissionData.id,
           submissionTime: submissionData.submissionTime,
           filesName: submissionData.filesNames,
-          score: submissionData.score ? submissionData.score : undefined,
+          point: submissionData.point ? submissionData.point : undefined,
+          submissionBy: submissionData.submissionBy,
           feedback: submissionData.feedback ? submissionData.feedback : undefined,
         }
       } 

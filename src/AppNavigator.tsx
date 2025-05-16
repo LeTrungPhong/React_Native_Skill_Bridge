@@ -1,19 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-// Import your screen components
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import ActivityScreen from './screens/activities/ActivityScreen';
-// import AssignmentScreen from './screens/AssignmentScreen';
 import ChatScreen from './screens/chat/ChatScreen';
 import TeamsScreen from './screens/teams/TeamsScreen';
 import MoreScreen from './screens/MoreScreen';
-
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
 import { createStackNavigator } from '@react-navigation/stack';
 import GeneralScreen from './screens/teams/GeneralScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
-import ActivityDetailScreen from './screens/activities/ActivityDetailScreen';
 import AssignmentScreen from './screens/assignments/AssignmentScreen';
 import LessonDetailScreen from './screens/teams/LessonDetailScreen';
 import AssignmentDetailScreen from './screens/assignments/AssignmentDetailScreen';
@@ -39,15 +34,6 @@ const TeamsStackScreen = () => (
     </TeamsStack.Navigator>
 );
 
-const ActivityStack = createStackNavigator();
-
-const ActivityStackScreen = () => (
-    <ActivityStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
-        <ActivityStack.Screen name='ActivityScreen' component={ActivityScreen}  />
-        <ActivityStack.Screen name='ActivityDetailScreen' component={ActivityDetailScreen}  />
-    </ActivityStack.Navigator> 
-);
-
 const AssignmentStack = createStackNavigator();
 const AssignmentStackScreen = () => (
     <AssignmentStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
@@ -69,7 +55,7 @@ const AppNavigator = () => {
             }}> 
             <Tab.Screen
                 name='activity'
-                component={ActivityStackScreen}
+                component={ActivityScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='notifications-outline' size={size} color={color} />
