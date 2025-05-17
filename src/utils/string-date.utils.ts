@@ -1,3 +1,4 @@
+// Format date time
 export const formatShortTime = (dateString: string): string => {
   const fixedDateString = dateString.replace(' ', 'T').replace(/\.\d+$/, '');
 
@@ -16,9 +17,29 @@ export const formatShortTime = (dateString: string): string => {
   return `${hour}:${minute}, ${day}/${month}/${year}`;
 };
 
+// Truncate string
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) {
     return text;
   }
   return text.substring(0, maxLength) + '...';
+};
+
+// Get random color for avatar
+const COLORS = [
+  '#5DADE2', 
+  '#F5B041',
+  '#58D68D',
+  '#BB8FCE',
+  '#EC7063',
+  '#45B39D',
+  '#AF7AC5',
+  '#5499C7',
+  '#52BE80',
+  '#F4D03F',
+];
+
+export const getRandomColor = (): string => {
+  const randomIndex = Math.floor(Math.random() * COLORS.length);
+  return COLORS[randomIndex];
 };

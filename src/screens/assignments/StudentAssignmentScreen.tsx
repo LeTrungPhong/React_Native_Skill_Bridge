@@ -23,7 +23,6 @@ const Stack = createStackNavigator();
 
 const AssignmentTabs = () => {
   const colorScheme = useColorScheme();
-  const navigation = useNavigation();
   
   const [assignments, setAssignments] = useState<{
     upcoming: IAssignment[], 
@@ -281,7 +280,6 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 8,
-    color: '#888',
   },
   searchText: {
     color: '#888',

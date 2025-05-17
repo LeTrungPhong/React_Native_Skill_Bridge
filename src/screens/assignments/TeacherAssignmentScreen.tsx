@@ -30,9 +30,9 @@ const TeacherAssignmentScreen = () => {
   const navigation = useNavigation<TeacherAssignmentScreenNavigationProp>();
   const [state] = useContext(AuthContext);
   const [assignments, setAssignments] = useState<IAssignment[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [classNames, setClassNames] = useState<{[key: string]: string}>({});
-  const [searchText, setSearchText] = useState<string>('');
+  const [searchText, setSearchText] = useState('');
 
   // Get classname 
   const getClassName = async (classId: string): Promise<string> => {
@@ -117,22 +117,6 @@ const TeacherAssignmentScreen = () => {
     }
   };
 
-  const handleDeleteAssignment = async (classId: string, assignmentId: string) => {
-    try {
-      console.log('Delete assignment:', `/api/assignment/${classId}/${assignmentId}`);
-      await apiJson.delete(`/api/assignment/${classId}/${assignmentId}`);
-      
-      fetchAssignments();
-    } catch (error: any) {
-      console.error('Error deleting assignment:', {
-        message: error.message,
-        status: error?.response?.status,
-        data: error?.response?.data,
-      });
-      Alert.alert('Error', 'Failed to delete assignment. Please try again.');
-    }
-  };
-
   // Render assignment item
   const renderAssignmentItem = ({ item }: { item: IAssignment }) => (
     <AssignmentItem
@@ -180,7 +164,7 @@ const TeacherAssignmentScreen = () => {
           />
           <TextInput
             style={styles.searchText}
-            placeholder='Search assignments...'
+            placeholder='Search'
             value={searchText}
             onChangeText={setSearchText}
             placeholderTextColor='#888'
@@ -246,7 +230,6 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 8,
-    color: '#888',
   },
   searchText: {
     color: '#888',
