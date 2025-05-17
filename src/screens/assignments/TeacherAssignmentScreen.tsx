@@ -35,7 +35,7 @@ const TeacherAssignmentScreen = () => {
   const [searchText, setSearchText] = useState('');
 
   // Get classname 
-  const getClassName = async (classId: string): Promise<string> => {
+  const getClassName = async (classId: number): Promise<string> => {
     try {
       if (classNames[classId]) {
         return classNames[classId];
@@ -179,7 +179,7 @@ const TeacherAssignmentScreen = () => {
 
       {loading ? (
         <View style={styles.content}>
-          <Text>Loading assignments...</Text>
+          <Text style={styles.loadingText}>Loading assignments...</Text>
         </View>
       ) : filteredAssignments.length > 0 ? (
         <FlatList
@@ -245,6 +245,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 16,
+  },
+  loadingText: {
+    marginTop: 16,
+    color: '#555',
+    fontSize: 16,
   },
   noAssignmentsText: {
     marginTop: 16,

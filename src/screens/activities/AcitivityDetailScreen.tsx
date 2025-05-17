@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     textAlign: 'center',
-    color: '#FF0000',
+    color: '#ff6b6b',
   }
 });
 
