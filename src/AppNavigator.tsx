@@ -12,6 +12,7 @@ import ChatDetailScreen from './screens/chat/ChatDetailScreen';
 import AssignmentScreen from './screens/assignments/AssignmentScreen';
 import LessonDetailScreen from './screens/teams/LessonDetailScreen';
 import AssignmentDetailScreen from './screens/assignments/AssignmentDetailScreen';
+import ActivityDetailScreen from './screens/activities/AcitivityDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -42,6 +43,15 @@ const AssignmentStackScreen = () => (
     </AssignmentStack.Navigator>
 );
 
+const ActivityStack = createStackNavigator();
+
+const ActivityStackScreen = () => (
+    <ActivityStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+        <ActivityStack.Screen name='ActivityScreen' component={ActivityScreen}  />
+        <ActivityStack.Screen name='ActivityDetailScreen' component={ActivityDetailScreen}  />
+    </ActivityStack.Navigator> 
+);
+
 const AppNavigator = () => {
     return (
         <Tab.Navigator
@@ -55,7 +65,7 @@ const AppNavigator = () => {
             }}> 
             <Tab.Screen
                 name='activity'
-                component={ActivityScreen}
+                component={ActivityStackScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name='notifications-outline' size={size} color={color} />

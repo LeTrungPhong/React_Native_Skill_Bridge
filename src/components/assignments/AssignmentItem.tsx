@@ -2,6 +2,7 @@ import { formatShortTime, truncateText } from '@/src/utils/string-date.utils';
 import { IAssignment, IStudentSubmission } from '@/src/types';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { getRandomColor } from '../teams/TeamItem';
 
 interface AssignmentItemProps {
   assignment: IAssignment;
@@ -9,25 +10,6 @@ interface AssignmentItemProps {
   submission?: IStudentSubmission;
   isTeacher?: boolean;
 }
-
-const COLORS = [
-  '#5DADE2', 
-  '#F5B041',
-  '#58D68D',
-  '#BB8FCE',
-  '#EC7063',
-  '#45B39D',
-  '#AF7AC5',
-  '#5499C7',
-  '#52BE80',
-  '#F4D03F',
-];
-
-// Get random color
-const getRandomColor = (): string => {
-  const randomIndex = Math.floor(Math.random() * COLORS.length);
-  return COLORS[randomIndex];
-};
 
 const AssignmentItem = ({ assignment, onPress, submission, isTeacher }: AssignmentItemProps) => {
   const avatarColor = getRandomColor();

@@ -72,7 +72,6 @@ const AssignmentDetailScreen = () => {
           <GradingAssignmentCard
             assignment={assignment}
           />
-          // <Text>Oke teacher</Text>
         ) : (
           <AssignmentCard
             assignment={assignment}
