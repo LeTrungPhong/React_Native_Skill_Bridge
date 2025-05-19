@@ -51,7 +51,7 @@ const ActivityDetailScreen = () => {
       </View>    
 
       <View style={styles.content}>
-        <Card />
+        <Card id={''} author={''} title={''} content={''} time={''} />
       </View>
     </KeyboardAvoidingView>
   );
