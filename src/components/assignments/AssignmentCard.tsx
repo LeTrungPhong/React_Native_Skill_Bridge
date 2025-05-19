@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { IAssignment, IFileUpload, IStudentSubmission } from '@/src/types';
-import { AuthContext } from '@/src/context/authContext';
 import { apiForm, apiJson } from '@/src/api/axios';
 import { Ionicons } from '@expo/vector-icons';
-import { formatShortTime } from '@/src/services/time.service';
+import { formatShortTime } from '@/src/utils/string-date.utils';
 import * as DocumentPicker from 'expo-document-picker';
+import { AuthContext } from '@/src/context/authContext';
+import { downloadFile } from '@/src/utils/download.utils';
 
 interface AssignmentCardProps {
   assignment: IAssignment;
@@ -20,7 +21,7 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitNoti, setSubmitNoti] = useState('');
   const [submitBtnText, setSubmitBtnText] = useState('Turn in');
-  const [score, setScore] = useState('No score yet');
+  const [point, setPoint] = useState('No point yet');
   
   // File upload
   const [formData, setFormData] = useState<IFileUpload[]>([]);
@@ -39,7 +40,9 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
           id: submissionData.id,
           submissionTime: submissionData.submissionTime,
           filesName: submissionData.filesNames || [],
-          score: submissionData.score
+          submissionBy: submissionData.submissionBy,
+          point: submissionData.point,
+          feedback: submissionData.feedback,
         });
       } else {
         setSubmission(null);
@@ -69,9 +72,9 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
       setOverdue(false);
       setSubmitBtnText('Undo turn in');
 
-      setScore(
-        submission.score !== undefined && submission.score !== null
-          ? `${submission.score} / 10 points`
+      setPoint(
+        submission.point !== null
+          ? `${submission.point}/100 points`
           : '10 points possible'
       );
       return;
@@ -193,26 +196,40 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
   };
 
   // Handle file downloads
-  const handleFileDownload = async (filename: string, isTeacherFile = false) => {
+  const handleFileDownload = async (filename: string, isTeacherFile: boolean) => {
     try {
       setIsLoading(true);
-      const endpoint = isTeacherFile 
-        ? `/api/assignment/${assignment.classId}/${assignment.id}/teacher/${filename}`
-        : `/api/assignment/${assignment.classId}/${assignment.id}/student/${filename}`;
-        
-      const res = await apiJson.get(endpoint);
-      
-      if (!res?.data) {
-        throw new Error('Failed to download file');
+
+      let url: string;
+      if(isTeacherFile){
+        url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/assignment/${assignment.classId}/${assignment.id}/${filename}`;
+      }else{
+        url = `${process.env.EXPO_PUBLIC_API_BASE_URL}/api/assignment/${assignment.classId}/${assignment.id}/result/mySubmit/${filename} `;
       }
       
-      // Handle file download here based on your app's requirements
-      // This might involve using Expo's FileSystem or other methods
-      Alert.alert('Success', 'File downloaded successfully');
+      await downloadFile({
+        apiBaseUrl: url,
+        fileName: filename,
+        authHeader: state.token,
+        onProgress: (progress) => {
+          console.log(`Download progress: ${progress}%`);
+        },
+        onSuccess: (uri) => {
+          console.log('File downloaded successfully to:', uri);
+        },
+        onError: (error) => {
+          console.error('Download error:', error);
+          Alert.alert('Error', 'Failed to download file. Please try again.');
+        }
+      });
       
-    } catch (error) {
-      console.error('Error downloading file:', error);
-      Alert.alert('Error', 'Failed to download file. Please try again.');
+    } catch (error: any) {
+      console.error('Error downloading file of teacher:', {
+        message: error.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+      Alert.alert('Error', 'Failed to download file of teacher. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -317,27 +334,21 @@ const AssignmentCard = ({ assignment }: AssignmentCardProps) => {
               )}
               
               {formErrors ? <Text style={styles.errorText}>{formErrors}</Text> : null}
-              
-              {/* {formData.length > 0 && !isSubmitted && (
-                <TouchableOpacity 
-                  style={[styles.submitButton, isLoading && styles.disabledButton]} 
-                  onPress={handleSubmit}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.submitButtonText}>
-                    {isLoading ? 'Processing...' : submitBtnText}
-                  </Text>
-                </TouchableOpacity>
-              )} */}
             </View>
           )}
         </View>
         
         <View style={styles.assignmentFooter}>
-          <View style={styles.scoreSection}>
-            <Text style={styles.scoreLabel}>Points</Text>
-            <Text style={styles.scoreValue}>{score}</Text>
+          <View style={styles.assignmentPoint}>
+            <Text style={styles.pointLabel}>Points</Text>
+            <Text style={styles.pointValue}>{point}</Text>
           </View>
+          {submission?.feedback && (
+            <View style={styles.assignmentPoint}>
+            <Text style={styles.pointLabel}>Feedback</Text>
+            <Text style={styles.pointValue}>{submission?.feedback}</Text>
+          </View>
+        )}
         </View>
       </View>
     </View>
@@ -474,19 +485,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
-  scoreSection: {
+  assignmentPoint: {
     flexDirection: 'column',
+    marginBottom: 8,
   },
-  scoreLabel: {
+  pointLabel: {
     marginBottom: 4,
     color: '#70757a',
     fontWeight: '500',
     fontSize: 14,
   },
-  scoreValue: {
-    color: '#5f6368',
+  pointValue: {
     fontSize: 14,
-    fontWeight: '500',
   },
   errorText: {
     color: '#ff6b6b',

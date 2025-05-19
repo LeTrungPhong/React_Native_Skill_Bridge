@@ -4,7 +4,6 @@ import {
   View, 
   Text, 
   FlatList, 
-  useColorScheme,
   Image,
   Modal,
   SafeAreaView,

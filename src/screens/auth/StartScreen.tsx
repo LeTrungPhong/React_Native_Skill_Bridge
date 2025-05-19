@@ -77,6 +77,7 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
 
   const saveAuth = async (user: any) => {
     try {
+
       const loginUser: IUser = {
         token: user.token,
         info: {
@@ -88,6 +89,12 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
           role: user.info.role,
         },
       };
+
+      if (loginUser.token == "") {
+        navigation.navigate('SignIn');
+        return;
+      }
+
       await AsyncStorage.setItem('@auth', JSON.stringify(loginUser));
       console.log()
       setState({ 
@@ -133,6 +140,11 @@ const StartScreen = ({ navigation }: StartScreenProps) => {
                 <Text style={styles.name}>{user.info.name || "User"}</Text>
                 <Text style={styles.username}>{user.info.username || ""}</Text>
               </View>
+              {user.token === "" && (
+                <View style={styles.loggedOutContainer}>
+                  <Text style={styles.loggedOutText}>đã log out</Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))
         ) : (
@@ -194,6 +206,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
+    justifyContent: 'space-between',
   },
   avatar: {
     width: 40,
@@ -209,6 +222,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     marginLeft: 15,
+    flex: 1,
   },
   name: {
     fontSize: 16,
@@ -247,6 +261,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: '#666',
     fontSize: 16,
+  },
+  loggedOutText: {
+    color: '#FF5252',
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+  },
+  loggedOutContainer: {
+    backgroundColor: 'rgba(255, 82, 82, 0.1)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 82, 82, 0.3)',
   },
 });
 

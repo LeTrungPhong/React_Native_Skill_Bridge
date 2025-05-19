@@ -31,7 +31,7 @@ export interface IAssignment {
   createBy: string;
   filesName: Array<string>;
   className: string;
-  classId: string;
+  classId: number;
 }
 
 export interface IAssignmentCreation {
@@ -53,33 +53,42 @@ export interface IStudentSubmission {
   id: string;
   submissionTime: string;
   filesName: Array<string>;
-  score?: number; //thêm demo
-  feedback?: string; //thêm demo
+  submissionBy: string;
+  point: number; 
+  feedback?: string;
 }
 
-////////////////
+export interface IStudentGrading {
+  point: number; 
+  feedback: string; 
+}
+
+export interface IActivity {
+  title: string;
+  body: string;
+  createdAt: string;
+  classId: number;
+  className: string;
+  type: string;
+  assignmentId?: string;
+  postId?: number;
+}
+
+export interface IPost {
+  id: number;
+  classId: number;
+  className: string;
+  teacherId: number;
+  teacherName: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  comments: Array<any>;
+}
+
 export type RootStackParamList = {
   Start: undefined;
   SignIn: undefined;
   SignUp: undefined;
   Home: undefined;
 };
-
-export interface IActivity {
-  id: string;
-  title: string;
-  content: string;
-  timestamp: string;
-  group: string;
-}
-
-export interface IDemooAssignment {
-  id: string;
-  title: string;
-  content: string;
-  submittedAt?: string;
-  deadline: string;
-  timestamp?: string;
-  group: string;
-  score?: number;
-}

@@ -23,15 +23,10 @@ apiJson.interceptors.request.use(
   async (config) => {
     const data = await AsyncStorage.getItem('@auth');
 
-    // console.log(data)
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-
     if (!config.url.endsWith('/register') && !config.url.endsWith('/log-in')) {
       config.headers.Authorization = `Bearer ${JSON.parse(data).token}`;
     }
-    // config.headers.Authorization = ;
+    
     return config;
   },
   (error) => {

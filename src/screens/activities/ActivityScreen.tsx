@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from "@react-navigation/native";
 import { 
   StyleSheet, 
   View, 
   Text, 
   FlatList, 
-  useColorScheme
+  Alert,
+  TouchableOpacity
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { IActivity } from '../../types';
 import ActivityItem from '../../components/activities/ActivityItem';
+import { apiJson } from '@/src/api/axios';
+import { TextInput } from 'react-native-gesture-handler';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from "@react-navigation/native";
 
 type ActivityScreenNavigationProp = StackNavigationProp<
   { 
@@ -21,54 +25,51 @@ type ActivityScreenNavigationProp = StackNavigationProp<
   'ActivityScreen'
 >;
 
-const ACTIVITIES: IActivity[] = [
-  {
-    id: '1',
-    title: 'New Assignment Posted',
-    content: 'You have a new assignment in the Math group.',
-    timestamp: '2025-04-20T08:30:00Z',
-    group: 'Math Group',
-  },
-  {
-    id: '2',
-    title: 'Team Meeting Reminder',
-    content: 'Your weekly team meeting starts in 30 minutes.',
-    timestamp: '2025-04-20T07:00:00Z',
-    group: 'Project Team A',
-  },
-  {
-    id: '3',
-    title: 'System Update',
-    content: 'Skill Bridge app was updated to version 2.1.',
-    timestamp: '2025-04-19T21:15:00Z',
-    group: 'Project Team A',
-  },
-  {
-    id: '4',
-    title: 'New Message',
-    content: 'Anna sent you a message in the Chat.',
-    timestamp: '2025-04-19T18:45:00Z',
-    group: 'Chat',
-  },
-  {
-    id: '5',
-    title: 'Submission Deadline',
-    content: 'Your assignment is due in 2 hours!',
-    timestamp: '2025-04-19T15:00:00Z',
-    group: 'English Group',
-  },
-];
-
 const ActivityScreen = () => {
-  const colorScheme = useColorScheme();
-  const [activities] = useState<IActivity[]>(ACTIVITIES);
   const navigation = useNavigation<ActivityScreenNavigationProp>();
 
+  const [activities, setActivities] = useState<IActivity[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchActivities = async () => {
+    setLoading(true);
+    try{
+      const res = await apiJson.get('/notification');
+      if(res && res.data.result){
+        setActivities(res.data.result);
+      }
+    }catch(error){
+      console.error('Error fetching activities:', error);
+      Alert.alert('Error', 'Failed to fetch activities.');
+      setActivities([]);
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchActivities();
+    }, [])
+  );
+
+  // Filter activities based on search text
+  const filteredActivities = searchText ? 
+    activities.filter(activity => 
+      activity.title.toLowerCase().includes(searchText.toLowerCase()) ||
+      activity.body.toLowerCase().includes(searchText.toLowerCase())
+    ) :
+    activities;
+
   const renderActivityItem = ({ item }: { item: IActivity }) => (
-    <ActivityItem 
-      activity={item} 
+    <ActivityItem
+      activity={item}
       onPress={() => {
-        console.log(`Selected activity: ${item.id}`);
         navigation.navigate('ActivityDetailScreen', { activity: item });
       }}
     />
@@ -79,25 +80,50 @@ const ActivityScreen = () => {
       <BlurView
         intensity={80}
         style={styles.header}
-        tint={colorScheme === 'dark' ? 'dark' : 'light'}
       >
         <Text style={styles.title}>Activities</Text>
         <View style={styles.searchBar}>
           <Ionicons
-            name='search'
+            name="search"
             size={20}
             style={styles.searchIcon}
           />
-          <Text style={styles.searchText}>Search</Text>
+          <TextInput
+            style={styles.searchText}
+            placeholder="Search"
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor="#888"
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText('')}>
+              <Ionicons name="close-circle" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
         </View>
       </BlurView>
 
-      <FlatList
-        data={activities}
-        renderItem={renderActivityItem}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
-      />
+      {loading ? (
+        <View style={styles.content}>
+          <Text>Loading activities...</Text>
+        </View>
+      ) : filteredActivities.length > 0 ? (
+        <FlatList
+          data={filteredActivities}
+          renderItem={renderActivityItem}
+          keyExtractor={(item, index) => index.toString()}
+          style={styles.list}
+          showsVerticalScrollIndicator={false}
+        />
+      ) : (
+        <View style={styles.content}>
+          <Text style={styles.noActivitiesText}>
+            {searchText 
+              ? 'No activities match your search.' 
+              : 'There are no activities at this time.'}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -126,16 +152,27 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 8,
-    color: '#888',
   },
   searchText: {
     color: '#888',
     flex: 1,
+    padding: -5,
   },
   list: {
     flex: 1,
     paddingHorizontal: 16,
-  }
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 16,
+  },
+  noActivitiesText: {
+    marginTop: 16,
+    color: '#555',
+    fontSize: 16,
+  },
 });
 
 export default ActivityScreen;

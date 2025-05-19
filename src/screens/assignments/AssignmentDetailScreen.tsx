@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { IAssignment } from '@/src/types';
 import AssignmentCard from '@/src/components/assignments/AssignmentCard';
 import { AuthContext } from '@/src/context/authContext';
+import GradingAssignmentCard from '@/src/components/assignments/GradingAssignmentCard';
 
 type AssignmentDetailScreenRouteProp = RouteProp<
   { AssignmentDetailScreen: { assignment: IAssignment }; }, 
@@ -68,17 +69,13 @@ const AssignmentDetailScreen = () => {
 
       <View style={styles.content}>
         {(state.info.role === 'TEACHER') ? (
-          // <AssignmentCard
-          //   assignment={assignment}
-          //   onSubmit={() => {}}
-          // />
-          <Text>Oke teacher</Text>
+          <GradingAssignmentCard
+            assignment={assignment}
+          />
         ) : (
           <AssignmentCard
             assignment={assignment}
-            // onSubmit={() => {}}
           />
-          // <Text>Oke student</Text>
         )}
       </View>
     </KeyboardAvoidingView>

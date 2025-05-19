@@ -12,7 +12,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "src/context/authContext.jsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts", 
-    "src/context/authContext.jsx"  ]
+    "expo-env.d.ts"
+  ]
 }

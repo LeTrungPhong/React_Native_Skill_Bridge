@@ -1,21 +1,18 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
-// Import your screen components
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import ActivityScreen from './screens/activities/ActivityScreen';
-// import AssignmentScreen from './screens/AssignmentScreen';
 import ChatScreen from './screens/chat/ChatScreen';
 import TeamsScreen from './screens/teams/TeamsScreen';
 import MoreScreen from './screens/MoreScreen';
-
-import { Ionicons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
 import { createStackNavigator } from '@react-navigation/stack';
 import GeneralScreen from './screens/teams/GeneralScreen';
 import ChatDetailScreen from './screens/chat/ChatDetailScreen';
-import ActivityDetailScreen from './screens/activities/ActivityDetailScreen';
 import AssignmentScreen from './screens/assignments/AssignmentScreen';
 import LessonDetailScreen from './screens/teams/LessonDetailScreen';
+import AssignmentDetailScreen from './screens/assignments/AssignmentDetailScreen';
+import ActivityDetailScreen from './screens/activities/AcitivityDetailScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -36,6 +33,14 @@ const TeamsStackScreen = () => (
         <TeamsStack.Screen name='GeneralScreen' component={GeneralScreen}  />
         <TeamsStack.Screen name='LessonDetailScreen' component={LessonDetailScreen}  />
     </TeamsStack.Navigator>
+);
+
+const AssignmentStack = createStackNavigator();
+const AssignmentStackScreen = () => (
+    <AssignmentStack.Navigator screenOptions={{ headerShown: false, presentation: 'modal' }}>
+        <AssignmentStack.Screen name='AssignmentHome' component={AssignmentScreen} />
+        <AssignmentStack.Screen name='AssignmentDetailScreen' component={AssignmentDetailScreen} />
+    </AssignmentStack.Navigator>
 );
 
 const ActivityStack = createStackNavigator();
@@ -71,7 +76,7 @@ const AppNavigator = () => {
             />
             <Tab.Screen
                 name='assignment'
-                component={AssignmentScreen} 
+                component={AssignmentStackScreen} 
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <MaterialIcons name='assignment' size={size} color={color} />
