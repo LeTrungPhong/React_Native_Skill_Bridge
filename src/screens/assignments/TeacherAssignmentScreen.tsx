@@ -105,7 +105,7 @@ const TeacherAssignmentScreen = () => {
         setAssignments([]);
       }
     } catch (error: any) {
-      console.error('Error fetching assignments:', {
+      console.log('Error fetching assignments:', {
         message: error.message,
         status: error?.response?.status,
         data: error?.response?.data,

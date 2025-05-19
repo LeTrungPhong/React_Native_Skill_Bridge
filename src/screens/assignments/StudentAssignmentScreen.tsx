@@ -132,7 +132,7 @@ const AssignmentTabs = () => {
         });
       } 
     } catch(error) {
-      console.error('Error fetching assignments:', error);
+      console.log('Error fetching assignments:', error);
     } finally {
       setIsLoading(false);
     }

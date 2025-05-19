@@ -86,7 +86,7 @@ const TeamAssignmentScreen = () => {
         console.log('Assignments:', assignments);
       }
     }catch(error){
-      console.error('Error fetching assignments:', error);
+      console.log('Error fetching assignments:', error);
     }
   };
 
